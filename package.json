@@ -1,0 +1,23 @@
+{
+  "name": "granite-math-sdk",
+  "version": "1.0.0",
+  "description": "Granite math sdk.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "homepage": "",
+  "scripts": {
+    "build": "tsup"
+  },
+  "author": "",
+  "keywords": [
+    "granite",
+    "math",
+    "sdk"
+  ],
+  "license": "ISC",
+  "devDependencies": {
+    "tsup": "^8.1.0",
+    "typescript": "^5.4.5"
+  }
+}
