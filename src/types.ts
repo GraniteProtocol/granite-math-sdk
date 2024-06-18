@@ -1,11 +1,11 @@
 export interface CollateralParams {
-    liquidationLTV?: number;
-    liquidationPremium?: number;
-    maxLTV?: number;
-    cap?: number;
+    liquidationLTV?: bigint;
+    liquidationPremium?: bigint;
+    maxLTV?: bigint;
+    cap?: bigint;
 }
 
 export interface Collateral extends CollateralParams {
-    amount: number;
-    price: number;
+    amount: bigint;
+    price: bigint;
 }
