@@ -1,7 +1,7 @@
 import {Collateral} from "./types";
 
 
-export function calculateAccountHealth(collaterals: Collateral[], currentDebt: number): number {
+export function calculateAccountHealth(collaterals: Collateral[], currentDebt: bigint): bigint {
     const totalCollateralValue = collaterals.reduce((total, collateral) => {
         if (!collateral.liquidationLTV) {
             throw new Error('Liquidity LTV is not defined');
@@ -16,7 +16,7 @@ export function calculateAccountHealth(collaterals: Collateral[], currentDebt: n
     return totalCollateralValue / currentDebt;
 }
 
-export function calculateDrop(collaterals: Collateral[], currentDebt: number): number {
+export function calculateDrop(collaterals: Collateral[], currentDebt: bigint): bigint {
     const totalCollateralValue = collaterals.reduce((total, collateral) => {
         if (!collateral.liquidationLTV) {
             throw new Error('Liquidity LTV is not defined');
@@ -31,13 +31,13 @@ export function calculateDrop(collaterals: Collateral[], currentDebt: number): n
     return  1 - (currentDebt / totalCollateralValue);
 }
 
-export function calculateTotalCollateralValue(collaterals: Collateral[]): number {
+export function calculateTotalCollateralValue(collaterals: Collateral[]): bigint {
     return collaterals.reduce((total, collateral) => {
         return total + (collateral.amount * collateral.price);
     }, 0);
 }
 
-export function calculateAccountLTV(accountTotalDebt: number, collaterals: Collateral[]): number {
+export function calculateAccountLTV(accountTotalDebt: bigint, collaterals: Collateral[]): bigint {
     const accountCollateralValue = calculateTotalCollateralValue(collaterals);
 
     if (accountCollateralValue === 0) {
@@ -47,7 +47,7 @@ export function calculateAccountLTV(accountTotalDebt: number, collaterals: Colla
     return accountTotalDebt / accountCollateralValue;
 }
 
-export function calculateBorrowCapacity(collaterals: Collateral[]): number {
+export function calculateBorrowCapacity(collaterals: Collateral[]): bigint {
     let sum = 0;
     for (const { amount, price, maxLTV } of collaterals) {
         if (!maxLTV) {
@@ -58,11 +58,11 @@ export function calculateBorrowCapacity(collaterals: Collateral[]): number {
     return sum;
 }
 
-export function calculateAvailableToBorrow(maxDebtAmt: number, outstandingDebtAmt: number, freeLiquidityInProtocol: number): number {
+export function calculateAvailableToBorrow(maxDebtAmt: bigint, outstandingDebtAmt: bigint, freeLiquidityInProtocol: bigint): bigint {
     return Math.min(maxDebtAmt - outstandingDebtAmt, freeLiquidityInProtocol);
 }
 
-export function calculateAccountLiqLTV(collaterals: Collateral[]): number {
+export function calculateAccountLiqLTV(collaterals: Collateral[]): bigint {
     const sumCollateralLiqTLV = collaterals.reduce((sum, collateral) => {
         if (collateral.liquidationLTV !== undefined) {
             return sum + collateral.liquidationLTV * (collateral.amount * collateral.price);
@@ -74,6 +74,6 @@ export function calculateAccountLiqLTV(collaterals: Collateral[]): number {
     return sumCollateralValue !== 0 ? sumCollateralLiqTLV / sumCollateralValue : 0;
 }
 
-export function calculateLiquidationPoint(accountDebt: number, accountLiqLTV: number): number {
+export function calculateLiquidationPoint(accountDebt: bigint, accountLiqLTV: bigint): bigint {
     return accountLiqLTV !== 0 ? accountDebt / accountLiqLTV : 0;
 }
