@@ -13,11 +13,10 @@ export function calculateDueInterest(debtAmt: bigint, openInterest: bigint, tota
     else
         ir = irParams.slope2 * (ur - irParams.urKink) + irParams.slope1 * irParams.urKink + irParams.baseIR;
 
-    return debtAmt * (1 + ir) ** (blocks * irParams.avgBlocktime);
+    return debtAmt * (BigInt(1) + ir) ** (blocks * irParams.avgBlocktime);
 }
 
 /**
- * @param collaterals the list of collaterals the user has deposited
  * @param userDebtShares current user debt in shares
  * @param totalDebtShares total amount of debt shares in the protocol
  * @param openInterest the protocol oustanding loans in asset terms
@@ -25,14 +24,13 @@ export function calculateDueInterest(debtAmt: bigint, openInterest: bigint, tota
  * @param irParams parameters from the interest rate contracts
  * @param blocks current block - last interest accrual block
 
-*/
+ */
 export function outstandingDebtAmt(
-    collaterals: Collateral[], 
-    userDebtShares: bigint, 
-    totalDebtShares: bigint, 
+    userDebtShares: bigint,
+    totalDebtShares: bigint,
     openInterest: bigint,
-    totalAssets: bigint, 
-    irParams: InterestRateParams, 
+    totalAssets: bigint,
+    irParams: InterestRateParams,
     blocks: bigint
 ): bigint {
     if (totalDebtShares == 0n) {
@@ -48,7 +46,7 @@ export function outstandingDebtAmt(
 /**
  * @param collaterals the list of collaterals the user has deposited
  * @param currentDebt current user debt in assets
-*/
+ */
 export function calculateAccountHealth(collaterals: Collateral[], currentDebt: bigint): bigint {
     const totalCollateralValue = collaterals.reduce((total, collateral) => {
         if (!collateral.liquidationLTV) {
@@ -76,7 +74,7 @@ export function calculateDrop(collaterals: Collateral[], currentDebt: bigint): b
         throw new Error('Total collateral value cannot be zero.');
     }
 
-    return  1n - (currentDebt / totalCollateralValue);
+    return 1n - (currentDebt / totalCollateralValue);
 }
 
 export function calculateTotalCollateralValue(collaterals: Collateral[]): bigint {
@@ -97,7 +95,7 @@ export function calculateAccountLTV(accountTotalDebt: bigint, collaterals: Colla
 
 export function calculateBorrowCapacity(collaterals: Collateral[]): bigint {
     let sum = 0n;
-    for (const { amount, price, maxLTV } of collaterals) {
+    for (const {amount, price, maxLTV} of collaterals) {
         if (!maxLTV) {
             throw new Error('Collateral max LTV is not defined.');
         }
@@ -107,7 +105,9 @@ export function calculateBorrowCapacity(collaterals: Collateral[]): bigint {
 }
 
 export function calculateAvailableToBorrow(maxDebtAmt: bigint, outstandingDebtAmt: bigint, freeLiquidityInProtocol: bigint): bigint {
-    return Math.min(maxDebtAmt - outstandingDebtAmt, freeLiquidityInProtocol);
+    const availableDebt = maxDebtAmt - outstandingDebtAmt;
+    // return Math.min(availableDebt, freeLiquidityInProtocol);
+    return availableDebt < freeLiquidityInProtocol ? availableDebt : freeLiquidityInProtocol;
 }
 
 export function calculateAccountLiqLTV(collaterals: Collateral[]): bigint {
