@@ -3,4 +3,5 @@ export interface Collateral {
     price: number;
     liquidationLTV?: number;
     maxLTV?: number;
+    cap: number;
 }
