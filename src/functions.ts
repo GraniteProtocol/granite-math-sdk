@@ -24,7 +24,6 @@ export function calculateDueInterest(debtAmt: bigint, openInterest: bigint, tota
  * @param reserveBalance assets in the reserve
  * @param irParams parameters from the interest rate contracts
  * @param blocks current block - last interest accrual block
-
  */
 export function outstandingDebtAmt(
     userDebtShares: bigint,
