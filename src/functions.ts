@@ -7,13 +7,23 @@ export function computeUtilizationRate(openInterest: bigint, totalAssets: bigint
 
 export function calculateDueInterest(debtAmt: bigint, openInterest: bigint, totalAssets: bigint, irParams: InterestRateParams, blocks: bigint): bigint {
     const ur: bigint = computeUtilizationRate(openInterest, totalAssets);
+    const ir = annualizedAPR(ur, irParams);
+
+    return debtAmt * (1n + ir / (365n * 24n * 60n * 60n)) ** (blocks * irParams.avgBlocktime);
+}
+
+/**
+ * @params ur utilization rate
+ * @param irParams parameters from the interest rate contracts
+ */
+export function annualizedAPR(ur: bigint, irParams: InterestRateParams) {
     let ir: bigint;
     if (ur < irParams.urKink)
         ir = irParams.slope1 * ur + irParams.baseIR;
     else
         ir = irParams.slope2 * (ur - irParams.urKink) + irParams.slope1 * irParams.urKink + irParams.baseIR;
-
-    return debtAmt * (1n + ir / (365n * 24n * 60n * 60n)) ** (blocks * irParams.avgBlocktime);
+    
+    return ir;
 }
 
 /**
