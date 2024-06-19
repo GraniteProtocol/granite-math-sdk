@@ -1,4 +1,5 @@
 export interface CollateralParams {
+    name?: string;
     liquidationLTV?: bigint;
     liquidationPremium?: bigint;
     maxLTV?: bigint;
