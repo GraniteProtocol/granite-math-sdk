@@ -1,11 +1,11 @@
 import {Collateral, InterestRateParams} from "./types";
 
-export function computeUtilizationRate(openInterest: bigint, totalAssets: bigint, reserveBalance: bigint): bigint {
-    if (totalAssets + reserveBalance == 0n) return 0n;
-    return openInterest / (reserveBalance + totalAssets);
+export function computeUtilizationRate(openInterest: bigint, totalAssets: bigint): bigint {
+    if (totalAssets == 0n) return 0n;
+    return openInterest / totalAssets;
 }
 
-export function calculateDueInterest(debtAmt: bigint, openInterest: bigint, totalAssets: bigint, reserveBalance: bigint, irParams: InterestRateParams, blocks: bigint): bigint {
+export function calculateDueInterest(debtAmt: bigint, openInterest: bigint, totalAssets: bigint, irParams: InterestRateParams, blocks: bigint): bigint {
     const ur: bigint = computeUtilizationRate(openInterest, totalAssets);
     let ir: bigint;
     if (ur < irParams.urKink)
@@ -13,7 +13,7 @@ export function calculateDueInterest(debtAmt: bigint, openInterest: bigint, tota
     else
         ir = irParams.slope2 * (ur - irParams.urKink) + irParams.slope1 * irParams.urKink + irParams.baseIR;
 
-    return debtAmt * (BigInt(1) + ir) ** (blocks * irParams.avgBlocktime);
+    return debtAmt * (1n + ir / (365n * 24n * 60n * 60n)) ** (blocks * irParams.avgBlocktime);
 }
 
 /**
@@ -21,7 +21,6 @@ export function calculateDueInterest(debtAmt: bigint, openInterest: bigint, tota
  * @param totalDebtShares total amount of debt shares in the protocol
  * @param openInterest the protocol oustanding loans in asset terms
  * @param totalAssets the LPs deposited assets
- * @param reserveBalance assets in the reserve
  * @param irParams parameters from the interest rate contracts
  * @param blocks current block - last interest accrual block
  */
@@ -30,7 +29,6 @@ export function outstandingDebtAmt(
     totalDebtShares: bigint,
     openInterest: bigint,
     totalAssets: bigint,
-    reserveBalance: bigint,
     irParams: InterestRateParams,
     blocks: bigint
 ): bigint {
@@ -41,7 +39,7 @@ export function outstandingDebtAmt(
     const sharePrice = openInterest / totalDebtShares;
     const debtAmt = userDebtShares * sharePrice;
 
-    return calculateDueInterest(debtAmt, openInterest, totalAssets, reserveBalance, irParams, blocks);
+    return calculateDueInterest(debtAmt, openInterest, totalAssets, irParams, blocks);
 }
 
 /**
