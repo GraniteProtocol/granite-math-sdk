@@ -119,6 +119,18 @@ export function calculateAvailableToBorrow(maxDebtAmt: bigint, outstandingDebtAm
     return availableDebt < freeLiquidityInProtocol ? availableDebt : freeLiquidityInProtocol;
 }
 
+export function calculateAccountMaxLTV(collaterals: Collateral[]): bigint {
+    const sumCollateralMaxTLV = collaterals.reduce((sum, collateral) => {
+        if (collateral.maxLTV !== undefined) {
+            return sum + collateral.maxLTV * (collateral.amount * collateral.price);
+        } else {
+            throw new Error('MaxTLV is not defined for one or more collaterals.');
+        }
+    }, 0n);
+    const sumCollateralValue = collaterals.reduce((sum, collateral) => sum + (collateral.amount * collateral.price), 0n);
+    return sumCollateralValue !== 0n ? sumCollateralMaxTLV / sumCollateralValue : 0n;
+}
+
 export function calculateAccountLiqLTV(collaterals: Collateral[]): bigint {
     const sumCollateralLiqTLV = collaterals.reduce((sum, collateral) => {
         if (collateral.liquidationLTV !== undefined) {
