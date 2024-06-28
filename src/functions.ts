@@ -13,7 +13,7 @@ export function calculateDueInterest(debtAmt: bigint, openInterest: bigint, tota
 }
 
 /**
- * @params ur utilization rate
+ * @param ur utilization rate
  * @param irParams parameters from the interest rate contracts
  */
 export function annualizedAPR(ur: bigint, irParams: InterestRateParams) {
