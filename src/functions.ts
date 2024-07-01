@@ -12,6 +12,14 @@ export function calculateDueInterest(debtAmt: bigint, openInterest: bigint, tota
     return debtAmt * (1n + ir / (365n * 24n * 60n * 60n)) ** (blocks * irParams.avgBlocktime);
 }
 
+export function convertDebtSharesToAssets(debtShares: bigint, openInterest: bigint, totalDebtShares: bigint, totalAssets: bigint, irParams: InterestRateParams, blocks: bigint): bigint {
+    if (totalDebtShares == 0n) return 0n;
+    
+    const correctedOpenInterest = calculateDueInterest(openInterest, openInterest, totalAssets, irParams, blocks);
+
+    return debtShares * correctedOpenInterest / totalDebtShares;
+}
+
 /**
  * @param ur utilization rate
  * @param irParams parameters from the interest rate contracts
@@ -42,9 +50,7 @@ export function outstandingDebtAmt(
     irParams: InterestRateParams,
     blocks: bigint
 ): bigint {
-    if (totalDebtShares == 0n) {
-        throw new Error('No debt in the protocol');
-    }
+    if (totalDebtShares == 0n) return 0n;
 
     const sharePrice = openInterest / totalDebtShares;
     const debtAmt = userDebtShares * sharePrice;
