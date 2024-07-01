@@ -1,20 +1,20 @@
 export interface CollateralParams {
     name?: string;
-    liquidationLTV?: bigint;
-    liquidationPremium?: bigint;
-    maxLTV?: bigint;
-    cap?: bigint;
+    liquidationLTV?: number;
+    liquidationPremium?: number;
+    maxLTV?: number;
+    cap?: number;
 }
 
 export interface Collateral extends CollateralParams {
-    amount: bigint;
-    price: bigint;
+    amount: number;
+    price: number;
 }
 
 export type InterestRateParams = {
-    urKink: bigint;
-    baseIR: bigint;
-    slope1: bigint;
-    slope2: bigint;
-    avgBlocktime: bigint;
+    urKink: number;
+    baseIR: number;
+    slope1: number;
+    slope2: number;
+    avgBlocktime: number;
 }

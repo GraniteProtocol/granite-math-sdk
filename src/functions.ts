@@ -1,19 +1,19 @@
 import {Collateral, InterestRateParams} from "./types";
 
-export function computeUtilizationRate(openInterest: bigint, totalAssets: bigint): bigint {
-    if (totalAssets == 0n) return 0n;
+export function computeUtilizationRate(openInterest: number, totalAssets: number): number {
+    if (totalAssets == 0) return 0;
     return openInterest / totalAssets;
 }
 
-export function calculateDueInterest(debtAmt: bigint, openInterest: bigint, totalAssets: bigint, irParams: InterestRateParams, blocks: bigint): bigint {
-    const ur: bigint = computeUtilizationRate(openInterest, totalAssets);
+export function calculateDueInterest(debtAmt: number, openInterest: number, totalAssets: number, irParams: InterestRateParams, blocks: number): number {
+    const ur: number = computeUtilizationRate(openInterest, totalAssets);
     const ir = annualizedAPR(ur, irParams);
 
-    return debtAmt * (1n + ir / (365n * 24n * 60n * 60n)) ** (blocks * irParams.avgBlocktime);
+    return debtAmt * (1 + ir / (365 * 24 * 60 * 60)) ** (blocks * irParams.avgBlocktime);
 }
 
-export function convertDebtSharesToAssets(debtShares: bigint, openInterest: bigint, totalDebtShares: bigint, totalAssets: bigint, irParams: InterestRateParams, blocks: bigint): bigint {
-    if (totalDebtShares == 0n) return 0n;
+export function convertDebtSharesToAssets(debtShares: number, openInterest: number, totalDebtShares: number, totalAssets: number, irParams: InterestRateParams, blocks: number): number {
+    if (totalDebtShares == 0) return 0;
     
     const correctedOpenInterest = calculateDueInterest(openInterest, openInterest, totalAssets, irParams, blocks);
 
@@ -24,8 +24,8 @@ export function convertDebtSharesToAssets(debtShares: bigint, openInterest: bigi
  * @param ur utilization rate
  * @param irParams parameters from the interest rate contracts
  */
-export function annualizedAPR(ur: bigint, irParams: InterestRateParams) {
-    let ir: bigint;
+export function annualizedAPR(ur: number, irParams: InterestRateParams) {
+    let ir: number;
     if (ur < irParams.urKink)
         ir = irParams.slope1 * ur + irParams.baseIR;
     else
@@ -43,14 +43,14 @@ export function annualizedAPR(ur: bigint, irParams: InterestRateParams) {
  * @param blocks current block - last interest accrual block
  */
 export function outstandingDebtAmt(
-    userDebtShares: bigint,
-    totalDebtShares: bigint,
-    openInterest: bigint,
-    totalAssets: bigint,
+    userDebtShares: number,
+    totalDebtShares: number,
+    openInterest: number,
+    totalAssets: number,
     irParams: InterestRateParams,
-    blocks: bigint
-): bigint {
-    if (totalDebtShares == 0n) return 0n;
+    blocks: number
+): number {
+    if (totalDebtShares == 0) return 0;
 
     const sharePrice = openInterest / totalDebtShares;
     const debtAmt = userDebtShares * sharePrice;
@@ -62,54 +62,54 @@ export function outstandingDebtAmt(
  * @param collaterals the list of collaterals the user has deposited
  * @param currentDebt current user debt in assets
  */
-export function calculateAccountHealth(collaterals: Collateral[], currentDebt: bigint): bigint {
+export function calculateAccountHealth(collaterals: Collateral[], currentDebt: number): number {
     const totalCollateralValue = collaterals.reduce((total, collateral) => {
         if (!collateral.liquidationLTV) {
             throw new Error('Liquidity LTV is not defined');
         }
         return total + (collateral.amount * collateral.price * collateral.liquidationLTV);
-    }, 0n);
+    }, 0);
 
-    if (currentDebt === 0n) {
+    if (currentDebt === 0) {
         throw new Error('Current debt cannot be zero.');
     }
 
     return totalCollateralValue / currentDebt;
 }
 
-export function calculateDrop(collaterals: Collateral[], currentDebt: bigint): bigint {
+export function calculateDrop(collaterals: Collateral[], currentDebt: number): number {
     const totalCollateralValue = collaterals.reduce((total, collateral) => {
         if (!collateral.liquidationLTV) {
             throw new Error('Liquidity LTV is not defined');
         }
         return total + (collateral.amount * collateral.price * collateral.liquidationLTV);
-    }, 0n);
+    }, 0);
 
-    if (totalCollateralValue === 0n) {
+    if (totalCollateralValue === 0) {
         throw new Error('Total collateral value cannot be zero.');
     }
 
-    return 1n - (currentDebt / totalCollateralValue);
+    return 1 - (currentDebt / totalCollateralValue);
 }
 
-export function calculateTotalCollateralValue(collaterals: Collateral[]): bigint {
+export function calculateTotalCollateralValue(collaterals: Collateral[]): number {
     return collaterals.reduce((total, collateral) => {
         return total + (collateral.amount * collateral.price);
-    }, 0n);
+    }, 0);
 }
 
-export function calculateAccountLTV(accountTotalDebt: bigint, collaterals: Collateral[]): bigint {
+export function calculateAccountLTV(accountTotalDebt: number, collaterals: Collateral[]): number {
     const accountCollateralValue = calculateTotalCollateralValue(collaterals);
 
-    if (accountCollateralValue === 0n) {
+    if (accountCollateralValue === 0) {
         throw new Error('Account collateral value cannot be zero.');
     }
 
     return accountTotalDebt / accountCollateralValue;
 }
 
-export function calculateBorrowCapacity(collaterals: Collateral[]): bigint {
-    let sum = 0n;
+export function calculateBorrowCapacity(collaterals: Collateral[]): number {
+    let sum = 0;
     for (const {amount, price, maxLTV} of collaterals) {
         if (!maxLTV) {
             throw new Error('Collateral max LTV is not defined.');
@@ -119,36 +119,36 @@ export function calculateBorrowCapacity(collaterals: Collateral[]): bigint {
     return sum;
 }
 
-export function calculateAvailableToBorrow(maxDebtAmt: bigint, outstandingDebtAmt: bigint, freeLiquidityInProtocol: bigint): bigint {
+export function calculateAvailableToBorrow(maxDebtAmt: number, outstandingDebtAmt: number, freeLiquidityInProtocol: number): number {
     const availableDebt = maxDebtAmt - outstandingDebtAmt;
     // return Math.min(availableDebt, freeLiquidityInProtocol);
     return availableDebt < freeLiquidityInProtocol ? availableDebt : freeLiquidityInProtocol;
 }
 
-export function calculateAccountMaxLTV(collaterals: Collateral[]): bigint {
+export function calculateAccountMaxLTV(collaterals: Collateral[]): number {
     const sumCollateralMaxTLV = collaterals.reduce((sum, collateral) => {
         if (collateral.maxLTV !== undefined) {
             return sum + collateral.maxLTV * (collateral.amount * collateral.price);
         } else {
             throw new Error('MaxTLV is not defined for one or more collaterals.');
         }
-    }, 0n);
-    const sumCollateralValue = collaterals.reduce((sum, collateral) => sum + (collateral.amount * collateral.price), 0n);
-    return sumCollateralValue !== 0n ? sumCollateralMaxTLV / sumCollateralValue : 0n;
+    }, 0);
+    const sumCollateralValue = collaterals.reduce((sum, collateral) => sum + (collateral.amount * collateral.price), 0);
+    return sumCollateralValue !== 0 ? sumCollateralMaxTLV / sumCollateralValue : 0;
 }
 
-export function calculateAccountLiqLTV(collaterals: Collateral[]): bigint {
+export function calculateAccountLiqLTV(collaterals: Collateral[]): number {
     const sumCollateralLiqTLV = collaterals.reduce((sum, collateral) => {
         if (collateral.liquidationLTV !== undefined) {
             return sum + collateral.liquidationLTV * (collateral.amount * collateral.price);
         } else {
             throw new Error('LiquidationLTV is not defined for one or more collaterals.');
         }
-    }, 0n);
-    const sumCollateralValue = collaterals.reduce((sum, collateral) => sum + (collateral.amount * collateral.price), 0n);
-    return sumCollateralValue !== 0n ? sumCollateralLiqTLV / sumCollateralValue : 0n;
+    }, 0);
+    const sumCollateralValue = collaterals.reduce((sum, collateral) => sum + (collateral.amount * collateral.price), 0);
+    return sumCollateralValue !== 0 ? sumCollateralLiqTLV / sumCollateralValue : 0;
 }
 
-export function calculateLiquidationPoint(accountDebt: bigint, accountLiqLTV: bigint): bigint {
-    return accountLiqLTV !== 0n ? accountDebt / accountLiqLTV : 0n;
+export function calculateLiquidationPoint(accountDebt: number, accountLiqLTV: number): number {
+    return accountLiqLTV !== 0 ? accountDebt / accountLiqLTV : 0;
 }
