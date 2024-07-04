@@ -17,7 +17,7 @@ export function compoundedInterest(debtAmt: number, openInterest: number, totalA
     const ur: number = computeUtilizationRate(openInterest, totalAssets);
     const ir = annualizedAPR(ur, irParams);
 
-    const interestAccrued = debtAmt * (1 - (1 + ir / (365 * 24 * 60 * 60)) ** (blocks * irParams.avgBlocktime));
+    const interestAccrued = debtAmt * ( (1 + ir / (365 * 24 * 60 * 60)) ** (blocks * irParams.avgBlocktime) - 1);
 
     return interestAccrued;
 }
@@ -31,6 +31,17 @@ export function convertAssetsToShares(assets: number, totalShares: number, total
     return assets * totalShares / (accruedInterest + totalAssets);
 }
 
+/**
+ * 
+ * @param shares shares to convert
+ * @param totalShares 
+ * @param totalAssets 
+ * @param openInterest 
+ * @param protocolReservePercentage 
+ * @param irParams 
+ * @param blocks 
+ * @returns 
+ */
 export function convertSharesToAssets(shares: number, totalShares: number, totalAssets: number, openInterest: number, protocolReservePercentage: number, irParams: InterestRateParams, blocks: number): number {
     if (totalShares == 0) return 0;
 
