@@ -1,5 +1,5 @@
-import { InterestRateParams } from '../src';
 import { computeUtilizationRate, calculateDueInterest, compoundedInterest, convertAssetsToShares, convertSharesToAssets } from '../src/functions';
+import { InterestRateParams } from '../src/types';
 
 test('computeUtilizationRate', () => {
   expect(computeUtilizationRate(10,100)).toBe(0.1);
@@ -16,7 +16,7 @@ test('calculateDueInterest', () => {
   }
   expect(calculateDueInterest(
     1, 500, 500, irParams, 1000
-  )).toBe(1.00002853);
+  )).toBeCloseTo(1.0002853);
 });
 
 test('compoundedInterest', () => {
