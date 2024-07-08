@@ -1,10 +1,13 @@
 import { Collateral, InterestRateParams } from "./types";
 
+// a % number that can be above 100% (thus > 1) but never negative as it's the ratio of two non-negative numbers
 export function computeUtilizationRate(openInterest: number, totalAssets: number): number {
   if (totalAssets == 0) return 0;
   return openInterest / totalAssets;
 }
 
+// using the current utilization rate, it computes how much is due for a given number of blocks and a given quantity
+// the block delta is usually the current blockchain block - the latest accrual block saved in the smart contract
 export function calculateDueInterest(debtAmt: number, openInterest: number, totalAssets: number, irParams: InterestRateParams, blocks: number): number {
   const ur: number = computeUtilizationRate(openInterest, totalAssets);
   const ir = annualizedAPR(ur, irParams);
@@ -13,6 +16,7 @@ export function calculateDueInterest(debtAmt: number, openInterest: number, tota
   return debtAmt * (1 + ir / (365 * 24 * 60 * 60)) ** (blocks * irParams.avgBlocktime);
 }
 
+// computes just the interests due on a given sum, using the same calculation as above
 export function compoundedInterest(debtAmt: number, openInterest: number, totalAssets: number, irParams: InterestRateParams, blocks: number): number {
   const ur: number = computeUtilizationRate(openInterest, totalAssets);
   const ir = annualizedAPR(ur, irParams);
@@ -22,6 +26,7 @@ export function compoundedInterest(debtAmt: number, openInterest: number, totalA
   return interestAccrued;
 }
 
+// transforms LP assets into an equivalent amount of shares using the latest share price
 export function convertAssetsToShares(assets: number, totalShares: number, totalAssets: number, openInterest: number, protocolReservePercentage: number, irParams: InterestRateParams, blocks: number): number {
   if (totalAssets == 0) return 0;
 
@@ -73,6 +78,8 @@ export function annualizedAPR(ur: number, irParams: InterestRateParams) {
 /**
  * @param collaterals the list of collaterals the user has deposited
  * @param currentDebt current user debt in assets
+ * 
+ * Account health value < 1 means the position is liquidable
  */
 export function calculateAccountHealth(collaterals: Collateral[], currentDebt: number): number {
   const totalCollateralValue = collaterals.reduce((total, collateral) => {
@@ -104,6 +111,7 @@ export function calculateDrop(collaterals: Collateral[], currentDebt: number): n
   return 1 - (currentDebt / totalCollateralValue);
 }
 
+// The sum of all deposited collateral amounts multiplied for their respective price
 export function calculateTotalCollateralValue(collaterals: Collateral[]): number {
   return collaterals.reduce((total, collateral) => {
     return total + (collateral.amount * collateral.price);
@@ -131,12 +139,14 @@ export function calculateBorrowCapacity(collaterals: Collateral[]): number {
   return sum;
 }
 
+// How much a number of borrowers can take from the protocol at the current time
 export function protocolAvailableToBorrow(freeLiquidity: number, reserveBalance: number): number {
   if (reserveBalance >= freeLiquidity) return 0;
 
   return freeLiquidity - reserveBalance;
 }
 
+// How much the user can borrow given their deposited collaterals
 export function userAvailableToBorrow(collaterals: Collateral[], freeLiquidity: number, reserveBalance: number): number {
   const protocolFreeLiquidity = protocolAvailableToBorrow(freeLiquidity, reserveBalance);
   const collateralValue = collaterals.reduce((sum, collateral) => {
