@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 22.x]
+        node-version: [22.x]
 
     steps:
     - uses: actions/checkout@v2
@@ -28,3 +28,6 @@ jobs:
 
     - name: Build
       run: npm run build
+
+    - name: Test
+      run: npm run test
