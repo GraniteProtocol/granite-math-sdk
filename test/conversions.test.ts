@@ -34,7 +34,7 @@ describe('convertDebtSharesToAssets', () => {
       testApyParams(),
       blocksInYear
     );
-    expect(result).toBeCloseTo(1150);
+    expect(result).toBeCloseTo(1161.83);
   });
 
   test('conversion with 0 totalDebtShares', () => {

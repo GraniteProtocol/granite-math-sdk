@@ -36,7 +36,7 @@ describe('calculateAccountHealth', () => {
     const collaterals = [createCollateral(100, 10, 0.8)];
     const currentDebt = 0;
 
-    expect(() => calculateAccountHealth(collaterals, currentDebt)).toThrow('Current debt cannot be zero.');
+    expect(() => calculateAccountHealth(collaterals, currentDebt)).toThrow('Current debt cannot be zero');
   });
 
   test('returns zero when no collaterals are provided', () => {

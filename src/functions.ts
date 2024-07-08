@@ -1,4 +1,4 @@
-import { Collateral, InterestRateParams } from "./types";
+import { Collateral, InterestRateParams } from './types';
 
 // a % number that can be above 100% (thus > 1) but never negative as it's the ratio of two non-negative numbers
 export function computeUtilizationRate(openInterest: number, totalAssets: number): number {
@@ -89,8 +89,8 @@ export function calculateAccountHealth(collaterals: Collateral[], currentDebt: n
     return total + (collateral.amount * collateral.price * collateral.liquidationLTV);
   }, 0);
 
-  if (currentDebt === 0) {
-    throw new Error('Current debt cannot be zero.');
+  if (currentDebt == 0) {
+    throw new Error('Current debt cannot be zero');
   }
 
   return totalCollateralValue / currentDebt;
@@ -104,7 +104,7 @@ export function calculateDrop(collaterals: Collateral[], currentDebt: number): n
     return total + (collateral.amount * collateral.price * collateral.liquidationLTV);
   }, 0);
 
-  if (totalCollateralValue === 0) {
+  if (totalCollateralValue == 0) {
     return 0;
   }
 
@@ -121,7 +121,7 @@ export function calculateTotalCollateralValue(collaterals: Collateral[]): number
 export function calculateAccountLTV(accountTotalDebt: number, collaterals: Collateral[]): number {
   const accountCollateralValue = calculateTotalCollateralValue(collaterals);
 
-  if (accountCollateralValue === 0) {
+  if (accountCollateralValue == 0) {
     return 0;
   }
 
@@ -132,7 +132,7 @@ export function calculateBorrowCapacity(collaterals: Collateral[]): number {
   let sum = 0;
   for (const { amount, price, maxLTV } of collaterals) {
     if (!maxLTV) {
-      throw new Error('Collateral max LTV is not defined.');
+      throw new Error('Collateral max LTV is not defined');
     }
     sum += amount * price * maxLTV;
   }
@@ -153,7 +153,7 @@ export function userAvailableToBorrow(collaterals: Collateral[], freeLiquidity: 
     if (collateral.maxLTV !== undefined) {
       return sum + collateral.maxLTV * (collateral.amount * collateral.price);
     } else {
-      throw new Error('MaxTLV is not defined for one or more collaterals.');
+      throw new Error('MaxTLV is not defined for one or more collaterals');
     }
   }, 0);
   return Math.min(protocolFreeLiquidity, collateralValue);
@@ -164,7 +164,7 @@ export function calculateAccountMaxLTV(collaterals: Collateral[]): number {
     if (collateral.maxLTV !== undefined) {
       return sum + collateral.maxLTV * (collateral.amount * collateral.price);
     } else {
-      throw new Error('MaxTLV is not defined for one or more collaterals.');
+      throw new Error('MaxTLV is not defined for one or more collaterals');
     }
   }, 0);
 }
@@ -174,14 +174,13 @@ export function calculateAccountLiqLTV(collaterals: Collateral[]): number {
     if (collateral.liquidationLTV !== undefined) {
       return sum + collateral.liquidationLTV * (collateral.amount * collateral.price);
     } else {
-      throw new Error('LiquidationLTV is not defined for one or more collaterals.');
+      throw new Error('LiquidationLTV is not defined for one or more collaterals');
     }
   }, 0);
 }
 
 export function calculateLiquidationPoint(accountLiqLTV: number, debtShares: number, openInterest: number, totalDebtShares: number, totalAssets: number, irParams: InterestRateParams, blocks: number): number {
   const accountDebt = convertDebtSharesToAssets(debtShares, openInterest, totalDebtShares, totalAssets, irParams, blocks);
-  if (accountDebt) throw new Error('No debt present');
 
   return accountLiqLTV !== 0 ? accountDebt / accountLiqLTV : 0;
 }
