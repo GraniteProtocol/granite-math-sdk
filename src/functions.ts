@@ -66,6 +66,8 @@ export function convertDebtSharesToAssets(debtShares: number, openInterest: numb
  * @param irParams parameters from the interest rate contracts
  */
 export function annualizedAPR(ur: number, irParams: InterestRateParams) {
+  if (ur == 0) return 0;
+
   let ir: number;
   if (ur < irParams.urKink)
     ir = irParams.slope1 * ur + irParams.baseIR;
