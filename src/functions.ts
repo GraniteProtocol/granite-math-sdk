@@ -31,7 +31,7 @@ export function convertAssetsToShares(assets: number, totalShares: number, total
   if (totalAssets == 0) return 0;
 
   const corretedOpenInterest = compoundedInterest(openInterest, openInterest, totalAssets, irParams, blocks);
-  const accruedInterest = corretedOpenInterest * (1 - protocolReservePercentage)
+  const accruedInterest = corretedOpenInterest * (1 - protocolReservePercentage);
 
   return assets * totalShares / (accruedInterest + totalAssets);
 }
@@ -66,8 +66,6 @@ export function convertDebtSharesToAssets(debtShares: number, openInterest: numb
  * @param irParams parameters from the interest rate contracts
  */
 export function annualizedAPR(ur: number, irParams: InterestRateParams) {
-  if (ur == 0) return 0;
-
   let ir: number;
   if (ur < irParams.urKink)
     ir = irParams.slope1 * ur + irParams.baseIR;
@@ -75,6 +73,19 @@ export function annualizedAPR(ur: number, irParams: InterestRateParams) {
     ir = irParams.slope2 * (ur - irParams.urKink) + irParams.slope1 * irParams.urKink + irParams.baseIR;
 
   return ir
+}
+
+export function calculateLpAPY(ur: number, irParams: InterestRateParams, protocolReservePercentage: number) {
+  if (ur == 0) return 0;
+  else { 
+    const lpAPR = annualizedAPR(ur, irParams) * (1 - protocolReservePercentage);
+    return (1 + lpAPR / 365) ** 365 - 1;
+  }
+}
+
+export function calculateBorrowAPY(ur: number, irParams: InterestRateParams) {
+  const borrowApr = annualizedAPR(ur, irParams);
+  return (1 + borrowApr / 365) ** 365 - 1;
 }
 
 /**
