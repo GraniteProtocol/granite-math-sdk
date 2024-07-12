@@ -1,5 +1,7 @@
 import { Collateral, InterestRateParams } from './types';
 
+export const secondsInAYear = (365 * 24 * 60 * 60);
+
 // a % number that can be above 100% (thus > 1) but never negative as it's the ratio of two non-negative numbers
 export function computeUtilizationRate(openInterest: number, totalAssets: number): number {
   if (totalAssets == 0) return 0;
@@ -13,7 +15,7 @@ export function calculateDueInterest(debtAmt: number, openInterest: number, tota
   const ir = annualizedAPR(ur, irParams);
 
   // (1.000000000000001) ^ 6000
-  return debtAmt * (1 + ir / (365 * 24 * 60 * 60)) ** (blocks * irParams.avgBlocktime);
+  return debtAmt * (1 + ir / secondsInAYear) ** (blocks * irParams.avgBlocktime);
 }
 
 // computes just the interests due on a given sum, using the same calculation as above
@@ -21,7 +23,7 @@ export function compoundedInterest(debtAmt: number, openInterest: number, totalA
   const ur: number = computeUtilizationRate(openInterest, totalAssets);
   const ir = annualizedAPR(ur, irParams);
 
-  const interestAccrued = debtAmt * ((1 + ir / (365 * 24 * 60 * 60)) ** (blocks * irParams.avgBlocktime) - 1);
+  const interestAccrued = debtAmt * ((1 + ir / secondsInAYear) ** (blocks * irParams.avgBlocktime) - 1);
 
   return interestAccrued;
 }
@@ -79,13 +81,13 @@ export function calculateLpAPY(ur: number, irParams: InterestRateParams, protoco
   if (ur == 0) return 0;
   else { 
     const lpAPR = annualizedAPR(ur, irParams) * (1 - protocolReservePercentage);
-    return (1 + lpAPR / 365) ** 365 - 1;
+    return (1 + lpAPR / secondsInAYear) ** secondsInAYear - 1;
   }
 }
 
 export function calculateBorrowAPY(ur: number, irParams: InterestRateParams) {
   const borrowApr = annualizedAPR(ur, irParams);
-  return (1 + borrowApr / 365) ** 365 - 1;
+  return (1 + borrowApr / secondsInAYear) ** secondsInAYear - 1;
 }
 
 /**
