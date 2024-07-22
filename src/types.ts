@@ -16,5 +16,4 @@ export type InterestRateParams = {
     baseIR: number;
     slope1: number;
     slope2: number;
-    avgBlocktime: number;
 }
