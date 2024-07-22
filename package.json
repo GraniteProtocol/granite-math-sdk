@@ -1,5 +1,5 @@
 {
-  "name": "granite-math-sdk",
+  "name": "granite-math-sdk-2",
   "version": "1.0.0",
   "description": "Granite math sdk.",
   "main": "./dist/index.js",
