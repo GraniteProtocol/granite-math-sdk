@@ -10,38 +10,38 @@ export function computeUtilizationRate(openInterest: number, totalAssets: number
 
 // using the current utilization rate, it computes how much is due for a given number of blocks and a given quantity
 // the block delta is usually the current blockchain block - the latest accrual block saved in the smart contract
-export function calculateDueInterest(debtAmt: number, openInterest: number, totalAssets: number, irParams: InterestRateParams, blocks: number): number {
+export function calculateDueInterest(debtAmt: number, openInterest: number, totalAssets: number, irParams: InterestRateParams, avgBlocktime: number, blocks: number): number {
   const ur: number = computeUtilizationRate(openInterest, totalAssets);
   const ir = annualizedAPR(ur, irParams);
 
   // (1.000000000000001) ^ 6000
-  return debtAmt * (1 + ir / secondsInAYear) ** (blocks * irParams.avgBlocktime);
+  return debtAmt * (1 + ir / secondsInAYear) ** (blocks * avgBlocktime);
 }
 
 // computes just the interests due on a given sum, using the same calculation as above
-export function compoundedInterest(debtAmt: number, openInterest: number, totalAssets: number, irParams: InterestRateParams, blocks: number): number {
+export function compoundedInterest(debtAmt: number, openInterest: number, totalAssets: number, irParams: InterestRateParams, avgBlocktime: number, blocks: number): number {
   const ur: number = computeUtilizationRate(openInterest, totalAssets);
   const ir = annualizedAPR(ur, irParams);
 
-  const interestAccrued = debtAmt * ((1 + ir / secondsInAYear) ** (blocks * irParams.avgBlocktime) - 1);
+  const interestAccrued = debtAmt * ((1 + ir / secondsInAYear) ** (blocks * avgBlocktime) - 1);
 
   return interestAccrued;
 }
 
 // transforms LP assets into an equivalent amount of shares using the latest share price
-export function convertAssetsToShares(assets: number, totalShares: number, totalAssets: number, openInterest: number, protocolReservePercentage: number, irParams: InterestRateParams, blocks: number): number {
+export function convertAssetsToShares(assets: number, totalShares: number, totalAssets: number, openInterest: number, protocolReservePercentage: number, irParams: InterestRateParams, avgBlocktime: number, blocks: number): number {
   if (totalAssets == 0) return 0;
 
-  const corretedOpenInterest = compoundedInterest(openInterest, openInterest, totalAssets, irParams, blocks);
+  const corretedOpenInterest = compoundedInterest(openInterest, openInterest, totalAssets, irParams, avgBlocktime, blocks);
   const accruedInterest = corretedOpenInterest * (1 - protocolReservePercentage);
 
   return assets * totalShares / (accruedInterest + totalAssets);
 }
 
-export function convertSharesToAssets(shares: number, totalShares: number, totalAssets: number, openInterest: number, protocolReservePercentage: number, irParams: InterestRateParams, blocks: number): number {
+export function convertSharesToAssets(shares: number, totalShares: number, totalAssets: number, openInterest: number, protocolReservePercentage: number, irParams: InterestRateParams, avgBlocktime: number, blocks: number): number {
   if (totalShares == 0) return 0;
 
-  const corretedOpenInterest = compoundedInterest(openInterest, openInterest, totalAssets, irParams, blocks);
+  const corretedOpenInterest = compoundedInterest(openInterest, openInterest, totalAssets, irParams, avgBlocktime, blocks);
   const accruedInterest = corretedOpenInterest * (1 - protocolReservePercentage)
 
   return shares * (accruedInterest + totalAssets) / totalShares;
@@ -55,10 +55,10 @@ export function convertSharesToAssets(shares: number, totalShares: number, total
  * @param irParams parameters from the interest rate contracts
  * @param blocks current block - last interest accrual block
  */
-export function convertDebtSharesToAssets(debtShares: number, openInterest: number, totalDebtShares: number, totalAssets: number, irParams: InterestRateParams, blocks: number): number {
+export function convertDebtSharesToAssets(debtShares: number, openInterest: number, totalDebtShares: number, totalAssets: number, irParams: InterestRateParams, avgBlocktime: number, blocks: number): number {
   if (totalDebtShares == 0) return 0;
 
-  const accruedInterest = compoundedInterest(openInterest, openInterest, totalAssets, irParams, blocks);
+  const accruedInterest = compoundedInterest(openInterest, openInterest, totalAssets, irParams, avgBlocktime, blocks);
 
   return debtShares * (openInterest + accruedInterest) / totalDebtShares;
 }
@@ -194,8 +194,8 @@ export function calculateAccountLiqLTV(collaterals: Collateral[]): number {
   }, 0);
 }
 
-export function calculateLiquidationPoint(accountLiqLTV: number, debtShares: number, openInterest: number, totalDebtShares: number, totalAssets: number, irParams: InterestRateParams, blocks: number): number {
-  const accountDebt = convertDebtSharesToAssets(debtShares, openInterest, totalDebtShares, totalAssets, irParams, blocks);
+export function calculateLiquidationPoint(accountLiqLTV: number, debtShares: number, openInterest: number, totalDebtShares: number, totalAssets: number, irParams: InterestRateParams, avgBlocktime: number, blocks: number): number {
+  const accountDebt = convertDebtSharesToAssets(debtShares, openInterest, totalDebtShares, totalAssets, irParams, avgBlocktime, blocks);
 
   return accountLiqLTV !== 0 ? accountDebt / accountLiqLTV : 0;
 }

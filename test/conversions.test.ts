@@ -1,6 +1,8 @@
 import { convertDebtSharesToAssets } from "../src/functions";
 import { InterestRateParams } from "../src/types";
 
+const avgBlocktime = 12;
+
 describe('convertDebtSharesToAssets', () => {
   function testApyParams(): InterestRateParams {
     return {
@@ -8,7 +10,6 @@ describe('convertDebtSharesToAssets', () => {
       baseIR: 0.15, // 15% APR != APY
       slope1: 0,
       slope2: 0,
-      avgBlocktime: 12,
     };
   }
 
@@ -19,6 +20,7 @@ describe('convertDebtSharesToAssets', () => {
       10000, // totalDebtShares
       20000, // totalAssets
       testApyParams(),
+      avgBlocktime,
       0 // blocks
     );
     expect(result).toBe(1000);
@@ -32,6 +34,7 @@ describe('convertDebtSharesToAssets', () => {
       10000, // totalDebtShares
       20000, // totalAssets
       testApyParams(),
+      avgBlocktime,
       blocksInYear
     );
     expect(result).toBeCloseTo(1161.83);
@@ -44,6 +47,7 @@ describe('convertDebtSharesToAssets', () => {
       0, // totalDebtShares
       20000, // totalAssets
       testApyParams(),
+      avgBlocktime,
       1000 // blocks
     );
     expect(result).toBe(0);
@@ -56,6 +60,7 @@ describe('convertDebtSharesToAssets', () => {
       10000, // totalDebtShares
       100000, // totalAssets (5% utilization)
       testApyParams(),
+      avgBlocktime,
       2628000 // ~1 month in blocks
     );
 
@@ -65,6 +70,7 @@ describe('convertDebtSharesToAssets', () => {
       10000, // totalDebtShares
       100000, // totalAssets (80% utilization)
       testApyParams(),
+      avgBlocktime,
       2628000 // ~1 month in blocks
     );
 
