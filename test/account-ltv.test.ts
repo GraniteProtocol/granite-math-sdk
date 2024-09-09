@@ -3,14 +3,15 @@ import { Collateral } from "../src/types";
 
 describe('calculateAccountLTV', () => {
   // Helper function to create a basic collateral object
-  const createCollateral = (amount: number, price: number): Collateral => ({
+  const createCollateral = (amount: number, price: number, liquidationLTV: number): Collateral => ({
     amount,
     price,
+    liquidationLTV,
   });
 
   test('calculates account LTV correctly with single collateral', () => {
     const accountTotalDebt = 500;
-    const collaterals = [createCollateral(100, 10)];
+    const collaterals = [createCollateral(100, 10, 0.7)];
 
     const ltv = calculateAccountLTV(accountTotalDebt, collaterals);
 
@@ -21,9 +22,9 @@ describe('calculateAccountLTV', () => {
   test('calculates account LTV correctly with multiple collaterals', () => {
     const accountTotalDebt = 1000;
     const collaterals = [
-      createCollateral(100, 10),
-      createCollateral(200, 5),
-      createCollateral(50, 20),
+      createCollateral(100, 10, 0.8),
+      createCollateral(200, 5, 0.5),
+      createCollateral(50, 20, 0.2),
     ];
 
     const ltv = calculateAccountLTV(accountTotalDebt, collaterals);
@@ -44,8 +45,8 @@ describe('calculateAccountLTV', () => {
   test('returns 0 when total collateral value is 0', () => {
     const accountTotalDebt = 1000;
     const collaterals = [
-      createCollateral(0, 10),
-      createCollateral(100, 0),
+      createCollateral(0, 10, 0.5),
+      createCollateral(100, 0, 0.7),
     ];
 
     const ltv = calculateAccountLTV(accountTotalDebt, collaterals);
@@ -55,7 +56,7 @@ describe('calculateAccountLTV', () => {
 
   test('calculates correct LTV for 0 debt', () => {
     const accountTotalDebt = 0;
-    const collaterals = [createCollateral(100, 10)];
+    const collaterals = [createCollateral(100, 10, 0.8)];
 
     const ltv = calculateAccountLTV(accountTotalDebt, collaterals);
 
@@ -64,7 +65,7 @@ describe('calculateAccountLTV', () => {
 
   test('calculates correct LTV for underwater account', () => {
     const accountTotalDebt = 2000;
-    const collaterals = [createCollateral(100, 10)];
+    const collaterals = [createCollateral(100, 10, 0.8)];
 
     const ltv = calculateAccountLTV(accountTotalDebt, collaterals);
 
@@ -75,10 +76,10 @@ describe('calculateAccountLTV', () => {
   test('calculates correct LTV with mixed collateral values', () => {
     const accountTotalDebt = 1000;
     const collaterals = [
-      createCollateral(100, 10),
-      createCollateral(0, 50),
-      createCollateral(200, 0),
-      createCollateral(50, 20),
+      createCollateral(100, 10, 0.8),
+      createCollateral(0, 50, 0.2),
+      createCollateral(200, 0, 0.5),
+      createCollateral(50, 20, 0.4),
     ];
 
     const ltv = calculateAccountLTV(accountTotalDebt, collaterals);

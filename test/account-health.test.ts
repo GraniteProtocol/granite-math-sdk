@@ -70,7 +70,7 @@ describe('calculateAccountHealth', () => {
     }] as Collateral[];
     const currentDebt = 500;
 
-    expect(() => calculateAccountHealth(collaterals, currentDebt)).toThrow('Liquidity LTV is not defined');
+    expect(() => calculateAccountHealth(collaterals, currentDebt)).toThrow('LiquidationLTV is not defined');
   });
 
   test('calculates correct health for underwater account', () => {
