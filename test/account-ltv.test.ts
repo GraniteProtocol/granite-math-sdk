@@ -1,13 +1,8 @@
 import { calculateAccountLTV } from "../src/functions";
 import { Collateral } from "../src/types";
+import { createCollateral } from "./utils";
 
 describe('calculateAccountLTV', () => {
-  // Helper function to create a basic collateral object
-  const createCollateral = (amount: number, price: number): Collateral => ({
-    amount,
-    price,
-  });
-
   test('calculates account LTV correctly with single collateral', () => {
     const accountTotalDebt = 500;
     const collaterals = [createCollateral(100, 10)];

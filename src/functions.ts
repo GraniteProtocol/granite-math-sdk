@@ -162,16 +162,15 @@ export function protocolAvailableToBorrow(freeLiquidity: number, reserveBalance:
 }
 
 // How much the user can borrow given their deposited collaterals
-export function userAvailableToBorrow(collaterals: Collateral[], freeLiquidity: number, reserveBalance: number): number {
+export function userAvailableToBorrow(collaterals: Collateral[], freeLiquidity: number, reserveBalance: number, currentDebt: number): number {
   const protocolFreeLiquidity = protocolAvailableToBorrow(freeLiquidity, reserveBalance);
-  const collateralValue = collaterals.reduce((sum, collateral) => {
-    if (collateral.maxLTV !== undefined) {
-      return sum + collateral.maxLTV * (collateral.amount * collateral.price);
-    } else {
-      throw new Error('MaxTLV is not defined for one or more collaterals');
-    }
-  }, 0);
-  return Math.min(protocolFreeLiquidity, collateralValue);
+  return Math.min(
+    protocolFreeLiquidity,
+    Math.max(
+      calculateBorrowCapacity(collaterals) - currentDebt,
+      0
+    )
+  );
 }
 
 export function calculateAccountMaxLTV(collaterals: Collateral[]): number {
