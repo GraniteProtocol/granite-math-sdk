@@ -1,5 +1,6 @@
-import { computeUtilizationRate, calculateDueInterest, compoundedInterest, convertAssetsToShares, convertSharesToAssets, calculateLpAPY, calculateBorrowAPY, secondsInAYear } from '../src/functions';
+import { computeUtilizationRate, calculateDueInterest, compoundedInterest, convertAssetsToShares, convertSharesToAssets, calculateLpAPY, calculateBorrowAPY, secondsInAYear, userAvailableToBorrow } from '../src/functions';
 import { InterestRateParams } from '../src/types';
+import { createCollateral } from './utils';
 
 const avgBlocktime = 6;
 
@@ -71,5 +72,23 @@ describe('APY Calculations', () => {
     const ur = 0;
     const result = calculateBorrowAPY(ur, irParams);
     expect(result).toBeGreaterThan(irParams.baseIR);
+  });
+
+  it('userAvailableToBorrow takes into account current debt', () => {
+    const collaterals = [createCollateral(100, 1, 0.5)];
+    const freeLiquidity = 100
+    // 100 * 1 * 0.5 = 50
+
+    const result = userAvailableToBorrow(collaterals, freeLiquidity, 0, 40);
+    expect(result).toBe(10)
+  });
+
+  it('userAvailableToBorrow is capped by free liquidity', () => {
+    const collaterals = [createCollateral(100, 1, 0.5)];
+    const freeLiquidity = 9
+    const reserveBalance = 1
+
+    const result = userAvailableToBorrow(collaterals, freeLiquidity, reserveBalance, 40);
+    expect(result).toBe(8) // should be 10 but free liquidity - reserve balance is 8
   });
 });
