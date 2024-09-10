@@ -186,13 +186,18 @@ export function userAvailableToBorrow(collaterals: Collateral[], freeLiquidity: 
 }
 
 export function calculateAccountMaxLTV(collaterals: Collateral[]): number {
-  return collaterals.reduce((sum, collateral) => {
+  const totalCollateralValue = calculateTotalCollateralValue(collaterals);
+  if (totalCollateralValue == 0) return 0;
+
+  const totalWeightedLTV = collaterals.reduce((sum, collateral) => {
     if (collateral.maxLTV !== undefined) {
       return sum + collateral.maxLTV * (collateral.amount * collateral.price);
     } else {
       throw new Error('MaxLTV is not defined for one or more collaterals');
     }
   }, 0);
+
+  return totalWeightedLTV / totalCollateralValue;
 }
 
 export function calculateAccountLiqLTV(collaterals: Collateral[]): number {
