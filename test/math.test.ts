@@ -1,4 +1,4 @@
-import { computeUtilizationRate, calculateDueInterest, compoundedInterest, convertAssetsToShares, convertSharesToAssets, calculateLpAPY, calculateBorrowAPY, secondsInAYear, userAvailableToBorrow } from '../src/functions';
+import { computeUtilizationRate, calculateDueInterest, compoundedInterest, convertAssetsToShares, convertSharesToAssets, calculateLpAPY, calculateBorrowAPY, secondsInAYear, userAvailableToBorrow, calculateMaxRepayAmount } from '../src/functions';
 import { InterestRateParams } from '../src/types';
 import { createCollateral } from './utils';
 
@@ -91,4 +91,23 @@ describe('APY Calculations', () => {
     const result = userAvailableToBorrow(collaterals, freeLiquidity, reserveBalance, 40);
     expect(result).toBe(8) // should be 10 but free liquidity - reserve balance is 8
   });
+
+  it('calculates max repay correctly', () => {
+    const irParams: InterestRateParams = {
+      urKink: 0.7,
+      baseIR: 0.5,
+      slope1: 0.75,
+      slope2: 1.5,
+    }
+    const result = calculateMaxRepayAmount(
+      1000, // debtShares
+      10000, // openInterest
+      10000, // totalDebtShares
+      20000, // totalAssets
+      irParams,
+      avgBlocktime,
+      432000 // blocks - 1 month
+    );
+    expect(result).toBeCloseTo(1074.595);
+  })
 });

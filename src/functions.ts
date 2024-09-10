@@ -215,3 +215,12 @@ export function calculateLiquidationPoint(accountLiqLTV: number, debtShares: num
 
   return accountLiqLTV !== 0 ? accountDebt / accountLiqLTV : 0;
 }
+
+export function calculateMaxRepayAmount(debtShares: number, openInterest: number, totalDebtShares: number, totalAssets: number, irParams: InterestRateParams, avgBlocktime: number, blocks: number): number {
+  const ur = computeUtilizationRate(openInterest, totalAssets);
+  const borrowAPY = calculateBorrowAPY(ur, irParams)
+  const debtAssets = convertDebtSharesToAssets(debtShares, openInterest, totalDebtShares, totalAssets, irParams, avgBlocktime, blocks);
+  const repayMultiplier = 1 + (borrowAPY / secondsInAYear) * (10 * 60);
+
+  return debtAssets * repayMultiplier;
+}
