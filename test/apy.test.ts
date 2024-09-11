@@ -1,7 +1,7 @@
 import { InterestRateParams } from "../src";
 import { calculateBorrowAPY, calculateLpAPY } from "../src/functions";
 
-test('calculateLpAPY', () => {
+test("calculateLpAPY", () => {
   function testApyParams(): InterestRateParams {
     return {
       urKink: 0.8,
@@ -14,7 +14,7 @@ test('calculateLpAPY', () => {
   expect(calculateLpAPY(0, testApyParams(), 0)).toBe(0);
 });
 
-test('calculateBorrowAPY', () => {
+test("calculateBorrowAPY", () => {
   function testApyParams(): InterestRateParams {
     return {
       urKink: 0.8,
