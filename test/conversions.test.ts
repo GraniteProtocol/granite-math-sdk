@@ -3,7 +3,7 @@ import { InterestRateParams } from "../src/types";
 
 const avgBlocktime = 12;
 
-describe('convertDebtSharesToAssets', () => {
+describe("convertDebtSharesToAssets", () => {
   function testApyParams(): InterestRateParams {
     return {
       urKink: 0.8,
@@ -13,7 +13,7 @@ describe('convertDebtSharesToAssets', () => {
     };
   }
 
-  test('basic conversion with no interest accrual', () => {
+  test("basic conversion with no interest accrual", () => {
     const result = convertDebtSharesToAssets(
       1000, // debtShares
       10000, // openInterest
@@ -21,13 +21,13 @@ describe('convertDebtSharesToAssets', () => {
       20000, // totalAssets
       testApyParams(),
       avgBlocktime,
-      0 // blocks
+      0, // blocks
     );
     expect(result).toBe(1000);
   });
 
-  test('conversion with interest accrual (1 year)', () => {
-    const blocksInYear = 365 * 24 * 60 * 60 / 12;
+  test("conversion with interest accrual (1 year)", () => {
+    const blocksInYear = (365 * 24 * 60 * 60) / 12;
     const result = convertDebtSharesToAssets(
       1000, // debtShares
       10000, // openInterest
@@ -35,12 +35,12 @@ describe('convertDebtSharesToAssets', () => {
       20000, // totalAssets
       testApyParams(),
       avgBlocktime,
-      blocksInYear
+      blocksInYear,
     );
     expect(result).toBeCloseTo(1161.83);
   });
 
-  test('conversion with 0 totalDebtShares', () => {
+  test("conversion with 0 totalDebtShares", () => {
     const result = convertDebtSharesToAssets(
       1000, // debtShares
       10000, // openInterest
@@ -48,12 +48,12 @@ describe('convertDebtSharesToAssets', () => {
       20000, // totalAssets
       testApyParams(),
       avgBlocktime,
-      1000 // blocks
+      1000, // blocks
     );
     expect(result).toBe(0);
   });
 
-  test('conversion with different utilization rates', () => {
+  test("conversion with different utilization rates", () => {
     const lowUtilization = convertDebtSharesToAssets(
       1000, // debtShares
       5000, // openInterest
@@ -61,7 +61,7 @@ describe('convertDebtSharesToAssets', () => {
       100000, // totalAssets (5% utilization)
       testApyParams(),
       avgBlocktime,
-      2628000 // ~1 month in blocks
+      2628000, // ~1 month in blocks
     );
 
     const highUtilization = convertDebtSharesToAssets(
@@ -71,7 +71,7 @@ describe('convertDebtSharesToAssets', () => {
       100000, // totalAssets (80% utilization)
       testApyParams(),
       avgBlocktime,
-      2628000 // ~1 month in blocks
+      2628000, // ~1 month in blocks
     );
 
     expect(highUtilization).toBeGreaterThan(lowUtilization);
