@@ -1,4 +1,4 @@
-import { calculateAccountHealth } from "../src/functions";
+import { calculateAccountHealth, calculateAccountLiqLTV, calculateLiquidationPoint } from "../src/functions";
 import { Collateral } from "../src/types";
 
 describe("calculateAccountHealth", () => {
@@ -92,4 +92,30 @@ describe("calculateAccountHealth", () => {
     // Expected health: (100 * 10 * 0.8) / 1000 = 0.8
     expect(health).toBe(0.8);
   });
+
+  test('calculate liquidation point', () => {
+    const collaterals = [
+      createCollateral(1000, 10, 0.8),
+    ];
+    const liqLtv = calculateAccountLiqLTV(collaterals);
+    const irParams = {
+      urKink: 0.8,
+      baseIR: 0.15,
+      slope1: 1.5,
+      slope2: 7,
+    };
+    const avgBlocktime = 6;
+
+    const lp = calculateLiquidationPoint(
+      liqLtv,
+      100, // debt shares
+      1000, // open interest
+      1000, // total debt shares
+      10000, // total assets (10% utili<ation rate)
+      irParams,
+      avgBlocktime,
+      1 // blocks
+    );
+    expect(lp).toBeCloseTo(125);
+  })
 });
