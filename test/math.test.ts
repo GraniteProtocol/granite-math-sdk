@@ -9,6 +9,7 @@ import {
   secondsInAYear,
   userAvailableToBorrow,
   calculateMaxRepayAmount,
+  calculateTotalCollateralValue,
 } from "../src/functions";
 import { InterestRateParams } from "../src/types";
 import { createCollateral } from "./utils";
@@ -160,4 +161,14 @@ describe("APY Calculations", () => {
     );
     expect(result).toBeCloseTo(1074.595);
   });
+
+  test('calculate total collateral value correctly', () => {
+    const collaterals = [
+      createCollateral(1000, 10),
+      createCollateral(250, 0.5),
+    ];
+
+    const val = calculateTotalCollateralValue(collaterals);
+    expect(val).toBe(10125);
+  })
 });
