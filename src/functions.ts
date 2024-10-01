@@ -153,7 +153,7 @@ export function calculateLpAPY(
 ) {
   if (ur == 0) return 0;
   else {
-    const lpAPR = annualizedAPR(ur, irParams) * (1 - protocolReservePercentage);
+    const lpAPR = annualizedAPR(ur, irParams) * (1 - protocolReservePercentage) * ur;
     return (1 + lpAPR / secondsInAYear) ** secondsInAYear - 1;
   }
 }

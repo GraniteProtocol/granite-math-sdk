@@ -13,7 +13,7 @@ describe("convertDebtSharesToAssets", () => {
     };
   }
 
-  test("basic conversion with no interest accrual", () => {
+  it("basic conversion with no interest accrual", () => {
     const result = convertDebtSharesToAssets(
       1000, // debtShares
       10000, // openInterest
@@ -26,7 +26,7 @@ describe("convertDebtSharesToAssets", () => {
     expect(result).toBe(1000);
   });
 
-  test("conversion with interest accrual (1 year)", () => {
+  it("conversion with interest accrual (1 year)", () => {
     const blocksInYear = (365 * 24 * 60 * 60) / 12;
     const result = convertDebtSharesToAssets(
       1000, // debtShares
@@ -40,7 +40,7 @@ describe("convertDebtSharesToAssets", () => {
     expect(result).toBeCloseTo(1161.83);
   });
 
-  test("conversion with 0 totalDebtShares", () => {
+  it("conversion with 0 totalDebtShares", () => {
     const result = convertDebtSharesToAssets(
       1000, // debtShares
       10000, // openInterest
@@ -53,7 +53,7 @@ describe("convertDebtSharesToAssets", () => {
     expect(result).toBe(0);
   });
 
-  test("conversion with different utilization rates", () => {
+  it("conversion with different utilization rates", () => {
     const lowUtilization = convertDebtSharesToAssets(
       1000, // debtShares
       5000, // openInterest

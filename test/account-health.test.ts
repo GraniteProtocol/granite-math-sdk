@@ -12,7 +12,7 @@ describe("calculateAccountHealth", () => {
     liquidationLTV,
   });
 
-  test("calculates account health correctly with single collateral", () => {
+  it("calculates account health correctly with single collateral", () => {
     const collaterals = [createCollateral(100, 10, 0.8)];
     const currentDebt = 500;
 
@@ -22,7 +22,7 @@ describe("calculateAccountHealth", () => {
     expect(health).toBe(1.6);
   });
 
-  test("calculates account health correctly with multiple collaterals", () => {
+  it("calculates account health correctly with multiple collaterals", () => {
     const collaterals = [
       createCollateral(100, 10, 0.8),
       createCollateral(200, 5, 0.7),
@@ -36,7 +36,7 @@ describe("calculateAccountHealth", () => {
     expect(health).toBe(2.4);
   });
 
-  test("returns error when debt is zero", () => {
+  it("returns error when debt is zero", () => {
     const collaterals = [createCollateral(100, 10, 0.8)];
     const currentDebt = 0;
 
@@ -45,7 +45,7 @@ describe("calculateAccountHealth", () => {
     );
   });
 
-  test("returns zero when no collaterals are provided", () => {
+  it("returns zero when no collaterals are provided", () => {
     const collaterals: Collateral[] = [];
     const currentDebt = 1000;
 
@@ -54,7 +54,7 @@ describe("calculateAccountHealth", () => {
     expect(health).toBe(0);
   });
 
-  test("handles collaterals with zero amount or price", () => {
+  it("handles collaterals with zero amount or price", () => {
     const collaterals = [
       createCollateral(0, 10, 0.8),
       createCollateral(100, 0, 0.8),
@@ -68,7 +68,7 @@ describe("calculateAccountHealth", () => {
     expect(health).toBe(1.6);
   });
 
-  test("throws error when liquidationLTV is undefined", () => {
+  it("throws error when liquidationLTV is undefined", () => {
     const collaterals = [
       {
         amount: 100,
@@ -83,7 +83,7 @@ describe("calculateAccountHealth", () => {
     );
   });
 
-  test("calculates correct health for underwater account", () => {
+  it("calculates correct health for underwater account", () => {
     const collaterals = [createCollateral(100, 10, 0.8)];
     const currentDebt = 1000;
 
@@ -93,7 +93,7 @@ describe("calculateAccountHealth", () => {
     expect(health).toBe(0.8);
   });
 
-  test('calculate liquidation point', () => {
+  it('calculate liquidation point', () => {
     const collaterals = [
       createCollateral(1000, 10, 0.8),
     ];

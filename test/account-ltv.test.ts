@@ -3,7 +3,7 @@ import { Collateral } from "../src/types";
 import { createCollateral } from "./utils";
 
 describe("calculateAccountLTV", () => {
-  test("calculates account LTV correctly with single collateral", () => {
+  it("calculates account LTV correctly with single collateral", () => {
     const accountTotalDebt = 500;
     const collaterals = [createCollateral(100, 10, 0.7)];
 
@@ -13,7 +13,7 @@ describe("calculateAccountLTV", () => {
     expect(ltv).toBe(0.5);
   });
 
-  test("calculates account LTV correctly with multiple collaterals", () => {
+  it("calculates account LTV correctly with multiple collaterals", () => {
     const accountTotalDebt = 1000;
     const collaterals = [
       createCollateral(100, 10, 0.8),
@@ -27,7 +27,7 @@ describe("calculateAccountLTV", () => {
     expect(ltv).toBeCloseTo(0.333);
   });
 
-  test("returns 0 when there are no collaterals", () => {
+  it("returns 0 when there are no collaterals", () => {
     const accountTotalDebt = 1000;
     const collaterals: Collateral[] = [];
 
@@ -36,7 +36,7 @@ describe("calculateAccountLTV", () => {
     expect(ltv).toBe(0);
   });
 
-  test("returns 0 when total collateral value is 0", () => {
+  it("returns 0 when total collateral value is 0", () => {
     const accountTotalDebt = 1000;
     const collaterals = [
       createCollateral(0, 10, 0.5),
@@ -48,7 +48,7 @@ describe("calculateAccountLTV", () => {
     expect(ltv).toBe(0);
   });
 
-  test("calculates correct LTV for 0 debt", () => {
+  it("calculates correct LTV for 0 debt", () => {
     const accountTotalDebt = 0;
     const collaterals = [createCollateral(100, 10, 0.8)];
 
@@ -57,7 +57,7 @@ describe("calculateAccountLTV", () => {
     expect(ltv).toBe(0);
   });
 
-  test("calculates correct LTV for underwater account", () => {
+  it("calculates correct LTV for underwater account", () => {
     const accountTotalDebt = 2000;
     const collaterals = [createCollateral(100, 10, 0.8)];
 
@@ -67,7 +67,7 @@ describe("calculateAccountLTV", () => {
     expect(ltv).toBe(2);
   });
 
-  test("calculates correct LTV with mixed collateral values", () => {
+  it("calculates correct LTV with mixed collateral values", () => {
     const accountTotalDebt = 1000;
     const collaterals = [
       createCollateral(100, 10, 0.8),
@@ -82,7 +82,7 @@ describe("calculateAccountLTV", () => {
     expect(ltv).toBe(0.5);
   });
 
-  test("calculates account max LTV correctly with a single collateral", () => {
+  it("calculates account max LTV correctly with a single collateral", () => {
     const collaterals = [createCollateral(100, 10, 0.7)];
 
     const ltv = calculateAccountMaxLTV(collaterals);
@@ -91,7 +91,7 @@ describe("calculateAccountLTV", () => {
     expect(ltv).toBe(0.7);
   });
 
-  test("calculates account max LTV correctly with multiple collaterals", () => {
+  it("calculates account max LTV correctly with multiple collaterals", () => {
     const collaterals = [
       createCollateral(100, 10, 0.7),
       createCollateral(12, 1, 0.4),
@@ -102,7 +102,7 @@ describe("calculateAccountLTV", () => {
     expect(ltv).toBeCloseTo(0.6075);
   });
 
-  test("calculates account liq LTV correctly with multiple collaterals", () => {
+  it("calculates account liq LTV correctly with multiple collaterals", () => {
     const collaterals = [
       createCollateral(100, 10, 0.7, 0.9),
       createCollateral(12, 1, 0.4, 0.6),
@@ -115,7 +115,7 @@ describe("calculateAccountLTV", () => {
     expect(liqLtv).toBeCloseTo(0.715);
   });
 
-  test('calculate borrow capacity', () => {
+  it('calculate borrow capacity', () => {
     const collaterals = [
       createCollateral(100, 10, 0.9),
     ];

@@ -16,12 +16,12 @@ import { createCollateral } from "./utils";
 
 const avgBlocktime = 6;
 
-test("computeUtilizationRate", () => {
+it("computeUtilizationRate", () => {
   expect(computeUtilizationRate(10, 100)).toBe(0.1);
   expect(computeUtilizationRate(101, 100)).toBe(1.01);
 });
 
-test("calculateDueInterest", () => {
+it("calculateDueInterest", () => {
   const irParams: InterestRateParams = {
     urKink: 0.7,
     baseIR: 0.5,
@@ -33,7 +33,7 @@ test("calculateDueInterest", () => {
   ).toBeCloseTo(1.0002853);
 });
 
-test("compoundedInterest", () => {
+it("compoundedInterest", () => {
   const irParams: InterestRateParams = {
     urKink: 0.7,
     baseIR: 0.5,
@@ -59,7 +59,7 @@ test("compoundedInterest", () => {
   expect(principal - interest).toBe(1);
 });
 
-test("convertAssetsToShares", () => {
+it("convertAssetsToShares", () => {
   const irParams: InterestRateParams = {
     urKink: 0.7,
     baseIR: 0.5,
@@ -162,7 +162,7 @@ describe("APY Calculations", () => {
     expect(result).toBeCloseTo(1074.595);
   });
 
-  test('calculate total collateral value correctly', () => {
+  it('calculate total collateral value correctly', () => {
     const collaterals = [
       createCollateral(1000, 10),
       createCollateral(250, 0.5),
