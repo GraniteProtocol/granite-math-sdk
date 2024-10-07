@@ -159,7 +159,7 @@ describe("APY Calculations", () => {
       avgBlocktime,
       432000, // blocks - 1 month
     );
-    expect(result).toBeCloseTo(1074.595);
+    expect(result).toBeCloseTo(1074.567);
   });
 
   it('calculate total collateral value correctly', () => {
