@@ -1,4 +1,9 @@
-import { calculateAccountLiqLTV, calculateAccountLTV, calculateAccountMaxLTV, calculateBorrowCapacity } from "../src/functions";
+import {
+  calculateAccountLiqLTV,
+  calculateAccountLTV,
+  calculateAccountMaxLTV,
+  calculateBorrowCapacity,
+} from "../src/functions";
 import { Collateral } from "../src/types";
 import { createCollateral } from "./utils";
 
@@ -115,11 +120,9 @@ describe("calculateAccountLTV", () => {
     expect(liqLtv).toBeCloseTo(0.715);
   });
 
-  it('calculate borrow capacity', () => {
-    const collaterals = [
-      createCollateral(100, 10, 0.9),
-    ];
-    const capacity = calculateBorrowCapacity(collaterals)
+  it("calculate borrow capacity", () => {
+    const collaterals = [createCollateral(100, 10, 0.9)];
+    const capacity = calculateBorrowCapacity(collaterals);
     expect(capacity).toBe(900);
-  })
+  });
 });

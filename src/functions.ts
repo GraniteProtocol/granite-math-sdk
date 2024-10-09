@@ -47,7 +47,7 @@ export function compoundedInterest(
 }
 
 // transforms LP assets into an equivalent amount of shares using the latest share price
-export function convertAssetsToShares(
+export function convertLpAssetsToShares(
   assets: number,
   totalShares: number,
   totalAssets: number,
@@ -73,7 +73,7 @@ export function convertAssetsToShares(
   return (assets * totalShares) / (accruedInterest + totalAssets);
 }
 
-export function convertSharesToAssets(
+export function convertLpSharesToAssets(
   shares: number,
   totalShares: number,
   totalAssets: number,
@@ -153,7 +153,8 @@ export function calculateLpAPY(
 ) {
   if (ur == 0) return 0;
   else {
-    const lpAPR = annualizedAPR(ur, irParams) * (1 - protocolReservePercentage) * ur;
+    const lpAPR =
+      annualizedAPR(ur, irParams) * (1 - protocolReservePercentage) * ur;
     return (1 + lpAPR / secondsInAYear) ** secondsInAYear - 1;
   }
 }
@@ -349,7 +350,32 @@ export function calculateMaxRepayAmount(
     avgBlocktime,
     blocks,
   );
-  const repayMultiplier = 1 + ((borrowAPY / 100) / secondsInAYear) * (10 * 60);
+  const repayMultiplier = 1 + (borrowAPY / 100 / secondsInAYear) * (10 * 60);
 
   return debtAssets * repayMultiplier;
+}
+
+export function computeTotalEarning(
+  shares: number,
+  totalShares: number,
+  totalAssets: number,
+  openInterest: number,
+  protocolReservePercentage: number,
+  irParams: InterestRateParams,
+  avgBlocktime: number,
+  blocks: number,
+  reserveBalance: number,
+): number {
+  return (
+    convertLpSharesToAssets(
+      shares,
+      totalShares,
+      totalAssets,
+      openInterest,
+      protocolReservePercentage,
+      irParams,
+      avgBlocktime,
+      blocks,
+    ) - reserveBalance
+  );
 }

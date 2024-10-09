@@ -2,8 +2,8 @@ import {
   computeUtilizationRate,
   calculateDueInterest,
   compoundedInterest,
-  convertAssetsToShares,
-  convertSharesToAssets,
+  convertLpAssetsToShares,
+  convertLpSharesToAssets,
   calculateLpAPY,
   calculateBorrowAPY,
   secondsInAYear,
@@ -59,7 +59,7 @@ it("compoundedInterest", () => {
   expect(principal - interest).toBe(1);
 });
 
-it("convertAssetsToShares", () => {
+it("convertLpAssetsToShares", () => {
   const irParams: InterestRateParams = {
     urKink: 0.7,
     baseIR: 0.5,
@@ -68,11 +68,11 @@ it("convertAssetsToShares", () => {
   };
 
   expect(
-    convertAssetsToShares(100, 8000, 10000, 0, 0, irParams, avgBlocktime, 0),
+    convertLpAssetsToShares(100, 8000, 10000, 0, 0, irParams, avgBlocktime, 0),
   ).toBe(80);
   // LP share value increases
   expect(
-    convertAssetsToShares(
+    convertLpAssetsToShares(
       100,
       8000,
       10000,
@@ -85,7 +85,7 @@ it("convertAssetsToShares", () => {
   ).toBeLessThan(80);
   // LP assets should have increased in number
   expect(
-    convertSharesToAssets(
+    convertLpSharesToAssets(
       80,
       8000,
       10000,
@@ -162,7 +162,7 @@ describe("APY Calculations", () => {
     expect(result).toBeCloseTo(1074.567);
   });
 
-  it('calculate total collateral value correctly', () => {
+  it("calculate total collateral value correctly", () => {
     const collaterals = [
       createCollateral(1000, 10),
       createCollateral(250, 0.5),
@@ -170,5 +170,5 @@ describe("APY Calculations", () => {
 
     const val = calculateTotalCollateralValue(collaterals);
     expect(val).toBe(10125);
-  })
+  });
 });
