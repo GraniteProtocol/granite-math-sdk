@@ -14,8 +14,6 @@ import {
 import { InterestRateParams } from "../src/types";
 import { createCollateral } from "./utils";
 
-const avgBlocktime = 6;
-
 it("computeUtilizationRate", () => {
   expect(computeUtilizationRate(10, 100)).toBe(0.1);
   expect(computeUtilizationRate(101, 100)).toBe(1.01);
@@ -28,9 +26,9 @@ it("calculateDueInterest", () => {
     slope1: 0.75,
     slope2: 1.5,
   };
-  expect(
-    calculateDueInterest(1, 500, 500, irParams, avgBlocktime, 1000),
-  ).toBeCloseTo(1.0002853);
+  expect(calculateDueInterest(1, 500, 500, irParams, 6000)).toBeCloseTo(
+    1.0002853,
+  );
 });
 
 it("compoundedInterest", () => {
@@ -40,22 +38,8 @@ it("compoundedInterest", () => {
     slope1: 0.75,
     slope2: 1.5,
   };
-  const interest = compoundedInterest(
-    1,
-    500,
-    500,
-    irParams,
-    avgBlocktime,
-    1000,
-  );
-  const principal = calculateDueInterest(
-    1,
-    500,
-    500,
-    irParams,
-    avgBlocktime,
-    1000,
-  );
+  const interest = compoundedInterest(1, 500, 500, irParams, 6000);
+  const principal = calculateDueInterest(1, 500, 500, irParams, 6000);
   expect(principal - interest).toBe(1);
 });
 
@@ -67,34 +51,14 @@ it("convertLpAssetsToShares", () => {
     slope2: 1.5,
   };
 
-  expect(
-    convertLpAssetsToShares(100, 8000, 10000, 0, 0, irParams, avgBlocktime, 0),
-  ).toBe(80);
+  expect(convertLpAssetsToShares(100, 8000, 10000, 0, 0, irParams, 0)).toBe(80);
   // LP share value increases
   expect(
-    convertLpAssetsToShares(
-      100,
-      8000,
-      10000,
-      1000,
-      0,
-      irParams,
-      avgBlocktime,
-      1000,
-    ),
+    convertLpAssetsToShares(100, 8000, 10000, 1000, 0, irParams, 6000),
   ).toBeLessThan(80);
   // LP assets should have increased in number
   expect(
-    convertLpSharesToAssets(
-      80,
-      8000,
-      10000,
-      1000,
-      0,
-      irParams,
-      avgBlocktime,
-      1000,
-    ),
+    convertLpSharesToAssets(80, 8000, 10000, 1000, 0, irParams, 6000),
   ).toBeGreaterThan(80);
 });
 
@@ -156,8 +120,7 @@ describe("APY Calculations", () => {
       10000, // totalDebtShares
       20000, // totalAssets
       irParams,
-      avgBlocktime,
-      432000, // blocks - 1 month
+      2592000, // seconds in one month
     );
     expect(result).toBeCloseTo(1074.567);
   });
