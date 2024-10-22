@@ -106,7 +106,6 @@ describe("calculateAccountHealth", () => {
       slope1: 1.5,
       slope2: 7,
     };
-    const avgBlocktime = 6;
 
     const lp = calculateLiquidationPoint(
       liqLtv,
@@ -115,8 +114,7 @@ describe("calculateAccountHealth", () => {
       1000, // total debt shares
       10000, // total assets (10% utili<ation rate)
       irParams,
-      avgBlocktime,
-      1, // blocks
+      1, // second
     );
     expect(lp).toBeCloseTo(125);
   });
