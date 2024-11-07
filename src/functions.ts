@@ -90,6 +90,30 @@ export function convertLpSharesToAssets(
   return (shares * (accruedInterest + totalAssets)) / totalShares;
 }
 
+export function convertDebtAssetsToShares(
+  debtAssets: number,
+  totalDebtShares: number,
+  totalAssets: number,
+  openInterest: number,
+  protocolReservePercentage: number,
+  irParams: InterestRateParams,
+  timeDelta: number,
+): number {
+  if (totalAssets == 0) return 0;
+
+  const corretedOpenInterest = compoundedInterest(
+    openInterest,
+    openInterest,
+    totalAssets,
+    irParams,
+    timeDelta,
+  );
+  const accruedInterest =
+    corretedOpenInterest * (1 - protocolReservePercentage);
+
+  return (debtAssets * totalDebtShares) / (accruedInterest + totalAssets);
+}
+
 /**
  * @param userDebtShares current user debt in shares
  * @param totalDebtShares total amount of debt shares in the protocol
