@@ -375,7 +375,7 @@ export function computeTotalEarning(
   timeDelta: number,
 ): number {
   return (
-    convertLpSharesToAssets(
+    Math.max(0, convertLpSharesToAssets(
       shares,
       totalShares,
       totalAssets,
@@ -383,6 +383,6 @@ export function computeTotalEarning(
       protocolReservePercentage,
       irParams,
       timeDelta,
-    ) - reserveBalance
+    ) - reserveBalance)
   );
 }
