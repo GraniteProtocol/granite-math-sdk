@@ -111,7 +111,7 @@ export function convertDebtAssetsToShares(
   const accruedInterest =
     corretedOpenInterest * (1 - protocolReservePercentage);
 
-  return (debtAssets * totalDebtShares) / (accruedInterest + totalAssets);
+  return (debtAssets * totalDebtShares) / (accruedInterest + openInterest);
 }
 
 /**
