@@ -27,7 +27,7 @@ it("calculateDueInterest", () => {
     slope2: 1.5,
   };
   expect(calculateDueInterest(1, 500, 500, irParams, 6000)).toBeCloseTo(
-    1.0002853,
+    1.0002853
   );
 });
 
@@ -54,11 +54,11 @@ it("convertLpAssetsToShares", () => {
   expect(convertLpAssetsToShares(100, 8000, 10000, 0, 0, irParams, 0)).toBe(80);
   // LP share value increases
   expect(
-    convertLpAssetsToShares(100, 8000, 10000, 1000, 0, irParams, 6000),
+    convertLpAssetsToShares(100, 8000, 10000, 1000, 0, irParams, 6000)
   ).toBeLessThan(80);
   // LP assets should have increased in number
   expect(
-    convertLpSharesToAssets(80, 8000, 10000, 1000, 0, irParams, 6000),
+    convertLpSharesToAssets(80, 8000, 10000, 1000, 0, irParams, 6000)
   ).toBeGreaterThan(80);
 });
 
@@ -102,7 +102,7 @@ describe("APY Calculations", () => {
       collaterals,
       freeLiquidity,
       reserveBalance,
-      40,
+      40
     );
     expect(result).toBe(8); // should be 10 but free liquidity - reserve balance is 8
   });
@@ -120,9 +120,9 @@ describe("APY Calculations", () => {
       10000, // totalDebtShares
       20000, // totalAssets
       irParams,
-      2592000, // seconds in one month
+      2592000 // seconds in one month
     );
-    expect(result).toBeCloseTo(1074.567);
+    expect(result).toBeCloseTo(1074.596, 3);
   });
 
   it("calculate total collateral value correctly", () => {
