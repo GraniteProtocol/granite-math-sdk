@@ -11,6 +11,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:coverage:open": "jest --coverage && open coverage/index.html",
     "format": "prettier -w ."
   },
   "author": "",

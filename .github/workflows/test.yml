@@ -15,10 +15,10 @@ jobs:
         node-version: [22.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
@@ -29,5 +29,78 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Test
-        run: npm run test
+      - name: Test with Coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+      - name: Check Coverage of functions.ts
+        run: |
+          COVERAGE_FILE="coverage/coverage-summary.json"
+          if [ ! -f "$COVERAGE_FILE" ]; then
+            echo "Coverage file not found at $COVERAGE_FILE"
+            ls -la coverage/
+            exit 1
+          fi
+
+          # Extract coverage for functions.ts
+          FUNCTIONS_COVERAGE=$(node -e "
+            const coverage = require('./$COVERAGE_FILE');
+            const functionsFile = Object.keys(coverage).find(key => key.endsWith('functions.ts'));
+            if (!functionsFile) {
+              console.log('functions.ts coverage not found');
+              process.exit(1);
+            }
+            const stats = coverage[functionsFile];
+            console.log(\`Functions.ts Coverage:
+            Statements: \${stats.statements.pct}%
+            Branches: \${stats.branches.pct}%
+            Functions: \${stats.functions.pct}%\`);
+          ")
+
+          echo "$FUNCTIONS_COVERAGE"
+
+      - name: Comment PR with Coverage
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const coverageFile = 'coverage/coverage-summary.json';
+
+            try {
+              const coverage = JSON.parse(fs.readFileSync(coverageFile, 'utf8'));
+              const functionsFile = Object.keys(coverage).find(key => key.endsWith('functions.ts'));
+              
+              if (!functionsFile) {
+                throw new Error('functions.ts coverage not found');
+              }
+              
+              const stats = coverage[functionsFile];
+              
+              const comment = `## Coverage Report for functions.ts
+              
+              | Metric | Coverage |
+              |--------|----------|
+              | Statements | ${stats.statements.pct}% |
+              | Branches | ${stats.branches.pct}% |
+              | Functions | ${stats.functions.pct}% |
+              | Lines | ${stats.lines.pct}% |
+              
+              ${stats.statements.pct < 90 || stats.branches.pct < 65 || stats.functions.pct < 100 ? '⚠️ Coverage is below threshold!' : '✅ Coverage meets all thresholds!'}
+              `;
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            } catch (error) {
+              console.error('Error creating coverage comment:', error);
+            }
