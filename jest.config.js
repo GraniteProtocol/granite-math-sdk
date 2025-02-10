@@ -27,6 +27,6 @@ module.exports = {
       lines: 96
     }
   },
-  coverageReporters: ['text', 'html'],
+  coverageReporters: ['text', 'html', 'json-summary', 'json'],
   coverageDirectory: 'coverage'
 };

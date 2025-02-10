@@ -41,9 +41,10 @@ jobs:
 
       - name: Check Coverage of functions.ts
         run: |
-          COVERAGE_FILE="coverage/coverage-final.json"
+          COVERAGE_FILE="coverage/coverage-summary.json"
           if [ ! -f "$COVERAGE_FILE" ]; then
-            echo "Coverage file not found!"
+            echo "Coverage file not found at $COVERAGE_FILE"
+            ls -la coverage/
             exit 1
           fi
 
@@ -56,13 +57,10 @@ jobs:
               process.exit(1);
             }
             const stats = coverage[functionsFile];
-            const statements = stats.statementMap ? (stats.s.total / Object.keys(stats.statementMap).length) * 100 : 0;
-            const branches = stats.branchMap ? (stats.b.total / Object.keys(stats.branchMap).length) * 100 : 0;
-            const functions = stats.fnMap ? (stats.f.total / Object.keys(stats.fnMap).length) * 100 : 0;
             console.log(\`Functions.ts Coverage:
-            Statements: \${statements.toFixed(2)}%
-            Branches: \${branches.toFixed(2)}%
-            Functions: \${functions.toFixed(2)}%\`);
+            Statements: \${stats.statements.pct}%
+            Branches: \${stats.branches.pct}%
+            Functions: \${stats.functions.pct}%\`);
           ")
 
           echo "$FUNCTIONS_COVERAGE"
@@ -73,7 +71,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const coverageFile = 'coverage/coverage-final.json';
+            const coverageFile = 'coverage/coverage-summary.json';
 
             try {
               const coverage = JSON.parse(fs.readFileSync(coverageFile, 'utf8'));
@@ -84,19 +82,17 @@ jobs:
               }
               
               const stats = coverage[functionsFile];
-              const statements = (stats.s.total / Object.keys(stats.statementMap).length) * 100;
-              const branches = (stats.b.total / Object.keys(stats.branchMap).length) * 100;
-              const functions = (stats.f.total / Object.keys(stats.fnMap).length) * 100;
               
               const comment = `## Coverage Report for functions.ts
               
               | Metric | Coverage |
               |--------|----------|
-              | Statements | ${statements.toFixed(2)}% |
-              | Branches | ${branches.toFixed(2)}% |
-              | Functions | ${functions.toFixed(2)}% |
+              | Statements | ${stats.statements.pct}% |
+              | Branches | ${stats.branches.pct}% |
+              | Functions | ${stats.functions.pct}% |
+              | Lines | ${stats.lines.pct}% |
               
-              ${statements < 90 || branches < 65 || functions < 100 ? '⚠️ Coverage is below threshold!' : '✅ Coverage meets all thresholds!'}
+              ${stats.statements.pct < 90 || stats.branches.pct < 65 || stats.functions.pct < 100 ? '⚠️ Coverage is below threshold!' : '✅ Coverage meets all thresholds!'}
               `;
               
               await github.rest.issues.createComment({
