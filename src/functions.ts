@@ -359,7 +359,7 @@ export function calculateMaxRepayAmount(
     irParams,
     timeDelta,
   );
-  const repayMultiplier = 1 + (borrowAPY / 100 / secondsInAYear) * (10 * 60);
+  const repayMultiplier = 1 + (borrowAPY / secondsInAYear) * (10 * 60);
 
   return debtAssets * repayMultiplier;
 }
