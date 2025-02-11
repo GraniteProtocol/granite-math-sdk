@@ -12,7 +12,7 @@
  */
 
 import { Collateral, InterestRateParams } from "../types";
-import { convertDebtSharesToAssets } from "./debt";
+import { convertDebtSharesToAssets } from "./borrow";
 
 /**
  * Calculates the health factor of an account based on collaterals and current debt

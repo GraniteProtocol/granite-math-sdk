@@ -8,17 +8,21 @@ import {
   annualizedAPR,
   protocolAvailableToBorrow,
   calculateBorrowCapacity,
+  convertDebtAssetsToShares,
+  convertDebtSharesToAssets,
   InterestRateParams,
 } from "../../src";
 import { createCollateral } from "../utils";
 
-describe("Borrow Module", () => {
+describe("Borrow and Debt Module", () => {
   const defaultIrParams: InterestRateParams = {
     urKink: 0.7,
     baseIR: 0.5,
     slope1: 0.75,
     slope2: 1.5,
   };
+
+  // -------------- Utilization Rate Tests --------------
 
   describe("Utilization Rate", () => {
     it("calculates standard utilization rate", () => {
@@ -34,6 +38,8 @@ describe("Borrow Module", () => {
       expect(computeUtilizationRate(0, 100)).toBe(0);
     });
   });
+
+  // -------------- Interest Calculations Tests --------------
 
   describe("Interest Calculations", () => {
     it("calculates due interest correctly", () => {
@@ -62,6 +68,8 @@ describe("Borrow Module", () => {
       expect(compoundedInterest(0, 500, 500, defaultIrParams, 6000)).toBe(0);
     });
   });
+
+  // -------------- APR and APY Tests --------------
 
   describe("APR and APY Calculations", () => {
     it("calculates annualized APR below kink", () => {
@@ -92,6 +100,144 @@ describe("Borrow Module", () => {
       expect(result).toBeGreaterThan(defaultIrParams.baseIR);
     });
   });
+
+  // -------------- Debt Share Conversion Tests --------------
+
+  describe("Debt Share Conversions", () => {
+    it("converts debt assets to shares correctly", () => {
+      const result = convertDebtAssetsToShares(
+        1000, // debtAssets
+        10000, // totalDebtShares
+        20000, // totalAssets
+        10000, // openInterest
+        0.1, // protocolReservePercentage
+        defaultIrParams,
+        3600 // 1 hour
+      );
+      expect(result).toBeGreaterThan(0);
+      expect(result).toBeLessThan(1000); // Should be less due to interest accrual
+    });
+
+    it("returns 0 when total assets is 0", () => {
+      const result = convertDebtAssetsToShares(
+        1000,
+        10000,
+        0, // totalAssets = 0
+        10000,
+        0.1,
+        defaultIrParams,
+        3600
+      );
+      expect(result).toBe(0);
+    });
+
+    it("handles zero debt assets", () => {
+      const result = convertDebtAssetsToShares(
+        0,
+        10000,
+        20000,
+        10000,
+        0.1,
+        defaultIrParams,
+        3600
+      );
+      expect(result).toBe(0);
+    });
+
+    it("handles different protocol reserve percentages", () => {
+      const withReserve = convertDebtAssetsToShares(
+        1000,
+        10000,
+        20000,
+        10000,
+        0.1,
+        defaultIrParams,
+        3600
+      );
+
+      const withoutReserve = convertDebtAssetsToShares(
+        1000,
+        10000,
+        20000,
+        10000,
+        0,
+        defaultIrParams,
+        3600
+      );
+
+      expect(withReserve).toBeGreaterThan(withoutReserve);
+    });
+
+    it("converts debt shares to assets correctly", () => {
+      const result = convertDebtSharesToAssets(
+        1000, // debtShares
+        10000, // openInterest
+        10000, // totalDebtShares
+        20000, // totalAssets
+        defaultIrParams,
+        3600 // 1 hour
+      );
+      expect(result).toBeGreaterThan(1000); // Should be more due to interest accrual
+    });
+
+    it("returns 0 when total debt shares is 0", () => {
+      const result = convertDebtSharesToAssets(
+        1000,
+        10000,
+        0, // totalDebtShares = 0
+        20000,
+        defaultIrParams,
+        3600
+      );
+      expect(result).toBe(0);
+    });
+
+    it("handles different utilization rates", () => {
+      const lowUtilization = convertDebtSharesToAssets(
+        1000,
+        1000, // openInterest
+        10000,
+        100000, // totalAssets (1% utilization)
+        defaultIrParams,
+        3600
+      );
+
+      const highUtilization = convertDebtSharesToAssets(
+        1000,
+        80000, // openInterest
+        10000,
+        100000, // totalAssets (80% utilization)
+        defaultIrParams,
+        3600
+      );
+
+      expect(highUtilization).toBeGreaterThan(lowUtilization);
+    });
+
+    it("maintains conversion relationship", () => {
+      const initialAssets = 1000;
+      const shares = convertDebtAssetsToShares(
+        initialAssets,
+        10000,
+        20000,
+        10000,
+        0,
+        defaultIrParams,
+        3600
+      );
+      const finalAssets = convertDebtSharesToAssets(
+        shares,
+        10000,
+        10000,
+        20000,
+        defaultIrParams,
+        3600
+      );
+      expect(finalAssets).toBeCloseTo(initialAssets);
+    });
+  });
+
+  // -------------- Borrow Capacity and Availability Tests --------------
 
   describe("Borrow Capacity and Availability", () => {
     it("calculates borrow capacity correctly", () => {
@@ -141,6 +287,8 @@ describe("Borrow Module", () => {
       expect(result).toBe(8);
     });
   });
+
+  // -------------- Repayment Calculations Tests --------------
 
   describe("Max Repay Calculations", () => {
     it("calculates max repay correctly", () => {

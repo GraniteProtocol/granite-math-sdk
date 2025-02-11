@@ -11,7 +11,7 @@
  */
 
 import { Collateral, InterestRateParams } from "../types";
-import { convertDebtSharesToAssets } from "./debt";
+import { convertDebtSharesToAssets } from "./borrow";
 
 /**
  * Calculates the maximum amount a liquidator can repay for a position

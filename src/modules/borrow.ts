@@ -1,17 +1,20 @@
 /**
- * Borrow Module
+ * Borrow and Debt Module
  *
- * This module handles all borrowing-related calculations including:
+ * This module handles all borrowing and debt-related calculations including:
  * - Utilization rate computation
  * - Interest rate calculations (due interest, compounded interest)
  * - APR/APY calculations
  * - Borrowing capacity and availability checks
  * - Maximum repayment calculations
+ * - Debt share conversions and management
+ * - Protocol reserve handling
  */
 
 import { InterestRateParams, Collateral } from "../types";
 import { secondsInAYear } from "../constants";
-import { convertDebtSharesToAssets } from "./debt";
+
+// -------------- Utilization & Interest Rate Calculations --------------
 
 /**
  * Calculates the utilization rate of the protocol
@@ -29,6 +32,24 @@ export function computeUtilizationRate(
 ): number {
   if (totalAssets == 0) return 0;
   return openInterest / totalAssets;
+}
+
+/**
+ * Calculates the annualized APR based on utilization rate
+ * @param ur - Current utilization rate
+ * @param irParams - Interest rate parameters including kink point and slopes
+ * @returns The annualized interest rate
+ */
+export function annualizedAPR(ur: number, irParams: InterestRateParams) {
+  let ir: number;
+  if (ur < irParams.urKink) ir = irParams.slope1 * ur + irParams.baseIR;
+  else
+    ir =
+      irParams.slope2 * (ur - irParams.urKink) +
+      irParams.slope1 * irParams.urKink +
+      irParams.baseIR;
+
+  return ir;
 }
 
 /**
@@ -79,24 +100,6 @@ export function compoundedInterest(
 }
 
 /**
- * Calculates the annualized APR based on utilization rate
- * @param ur - Current utilization rate
- * @param irParams - Interest rate parameters including kink point and slopes
- * @returns The annualized interest rate
- */
-export function annualizedAPR(ur: number, irParams: InterestRateParams) {
-  let ir: number;
-  if (ur < irParams.urKink) ir = irParams.slope1 * ur + irParams.baseIR;
-  else
-    ir =
-      irParams.slope2 * (ur - irParams.urKink) +
-      irParams.slope1 * irParams.urKink +
-      irParams.baseIR;
-
-  return ir;
-}
-
-/**
  * Calculates the borrowing APY including compounding effects
  * @param ur - Current utilization rate
  * @param irParams - Interest rate parameters
@@ -106,6 +109,76 @@ export function calculateBorrowAPY(ur: number, irParams: InterestRateParams) {
   const borrowApr = annualizedAPR(ur, irParams);
   return (1 + borrowApr / secondsInAYear) ** secondsInAYear - 1;
 }
+
+// -------------- Debt Share Conversions --------------
+
+/**
+ * Converts debt assets to shares based on the current share price
+ * @param debtAssets - Amount of debt in asset terms to convert to shares
+ * @param totalDebtShares - Total debt shares in the protocol
+ * @param totalAssets - Total assets in the protocol
+ * @param openInterest - Total outstanding loans
+ * @param protocolReservePercentage - Percentage of interest that goes to protocol reserves
+ * @param irParams - Interest rate parameters
+ * @param timeDelta - Time elapsed since last interest accrual
+ * @returns The equivalent amount of debt shares
+ */
+export function convertDebtAssetsToShares(
+  debtAssets: number,
+  totalDebtShares: number,
+  totalAssets: number,
+  openInterest: number,
+  protocolReservePercentage: number,
+  irParams: InterestRateParams,
+  timeDelta: number
+): number {
+  if (totalAssets == 0) return 0;
+
+  const corretedOpenInterest = compoundedInterest(
+    openInterest,
+    openInterest,
+    totalAssets,
+    irParams,
+    timeDelta
+  );
+  const accruedInterest =
+    corretedOpenInterest * (1 - protocolReservePercentage);
+
+  return (debtAssets * totalDebtShares) / (accruedInterest + openInterest);
+}
+
+/**
+ * Converts debt shares to assets based on the current share price
+ * @param debtShares - Amount of debt shares to convert to assets
+ * @param openInterest - Total outstanding loans
+ * @param totalDebtShares - Total debt shares in the protocol
+ * @param totalAssets - Total assets in the protocol
+ * @param irParams - Interest rate parameters
+ * @param timeDelta - Time elapsed since last interest accrual
+ * @returns The equivalent amount of debt in asset terms
+ */
+export function convertDebtSharesToAssets(
+  debtShares: number,
+  openInterest: number,
+  totalDebtShares: number,
+  totalAssets: number,
+  irParams: InterestRateParams,
+  timeDelta: number
+): number {
+  if (totalDebtShares == 0) return 0;
+
+  const accruedInterest = compoundedInterest(
+    openInterest,
+    openInterest,
+    totalAssets,
+    irParams,
+    timeDelta
+  );
+
+  return (debtShares * (openInterest + accruedInterest)) / totalDebtShares;
+}
+
+// -------------- Borrowing Capacity and Availability --------------
 
 /**
  * Calculates the maximum amount that can be borrowed against provided collaterals
@@ -163,6 +236,8 @@ export function userAvailableToBorrow(
   );
 }
 
+// -------------- Repayment Calculations --------------
+
 /**
  * Calculates the maximum repayment amount including accrued interest
  * @param debtShares - Amount of debt shares
@@ -183,6 +258,7 @@ export function calculateMaxRepayAmount(
 ): number {
   const ur = computeUtilizationRate(openInterest, totalAssets);
   const borrowAPY = calculateBorrowAPY(ur, irParams);
+
   const debtAssets = convertDebtSharesToAssets(
     debtShares,
     openInterest,
