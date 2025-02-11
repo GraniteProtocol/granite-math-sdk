@@ -6,7 +6,6 @@ import {
   calculateLiquidationPoint,
   calculateDrop,
   calculateTotalCollateralValue,
-  calculateWeightedLTV,
   Collateral,
 } from "../../src";
 import { createCollateral } from "../utils";
@@ -124,6 +123,26 @@ describe("Account Module", () => {
       const liqLtv = calculateAccountLiqLTV(collaterals);
       expect(liqLtv).toBeCloseTo(0.715);
     });
+
+    it("returns 0 when there are no collaterals", () => {
+      const collaterals: Collateral[] = [];
+      const liqLtv = calculateAccountLiqLTV(collaterals);
+      expect(liqLtv).toBe(0);
+    });
+
+    it("throws error for undefined liquidationLTV", () => {
+      const collaterals = [
+        {
+          amount: 100,
+          price: 10,
+          maxLTV: 0.8,
+        } as Collateral,
+      ];
+
+      expect(() => calculateAccountLiqLTV(collaterals)).toThrow(
+        "LiquidationLTV is not defined"
+      );
+    });
   });
 
   describe("calculateLiquidationPoint", () => {
@@ -208,32 +227,6 @@ describe("Account Module", () => {
 
       const value = calculateTotalCollateralValue(collaterals);
       expect(value).toBe(1000);
-    });
-  });
-
-  describe("calculateWeightedLTV", () => {
-    it("calculates weighted LTV correctly", () => {
-      const collaterals = [
-        createCollateral(100, 10, 0.8, 0.9),
-        createCollateral(200, 5, 0.7, 0.8),
-      ];
-
-      const weightedLTV = calculateWeightedLTV(collaterals);
-      expect(weightedLTV).toBe(1700); // (100 * 10 * 0.9) + (200 * 5 * 0.8)
-    });
-
-    it("throws error for undefined liquidationLTV", () => {
-      const collaterals = [
-        {
-          amount: 100,
-          price: 10,
-          maxLTV: 0.8,
-        } as Collateral,
-      ];
-
-      expect(() => calculateWeightedLTV(collaterals)).toThrow(
-        "LiquidationLTV is not defined"
-      );
     });
   });
 

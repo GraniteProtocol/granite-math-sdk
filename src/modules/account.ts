@@ -81,24 +81,6 @@ export function calculateTotalCollateralValue(
 }
 
 /**
- * Calculates the weighted average liquidation LTV across all collaterals
- * @param collaterals - Array of collateral assets
- * @returns The weighted average liquidation LTV
- * @throws Error if liquidationLTV is not defined for any collateral
- */
-export function calculateWeightedLTV(collaterals: Collateral[]): number {
-  const totalWeightedLTV = collaterals.reduce((total, collateral) => {
-    const collateralValue = collateral.amount * collateral.price;
-    if (!collateral.liquidationLTV) {
-      throw new Error("LiquidationLTV is not defined");
-    }
-    return total + collateral.liquidationLTV * collateralValue;
-  }, 0);
-
-  return totalWeightedLTV;
-}
-
-/**
  * Calculates the current Loan-to-Value ratio for an account
  * @param accountTotalDebt - Total outstanding debt for the account
  * @param collaterals - Array of collateral assets
@@ -149,8 +131,15 @@ export function calculateAccountLiqLTV(collaterals: Collateral[]): number {
     return 0;
   }
 
-  const averageLTV = calculateWeightedLTV(collaterals);
-  return averageLTV / accountCollateralValue;
+  const totalWeightedLTV = collaterals.reduce((total, collateral) => {
+    const collateralValue = collateral.amount * collateral.price;
+    if (!collateral.liquidationLTV) {
+      throw new Error("LiquidationLTV is not defined");
+    }
+    return total + collateral.liquidationLTV * collateralValue;
+  }, 0);
+
+  return totalWeightedLTV / accountCollateralValue;
 }
 
 /**
