@@ -11,14 +11,12 @@ import {
 import { createCollateral } from "../utils";
 
 describe("Account Module", () => {
-  describe("calculateAccountHealth", () => {
+  describe("Account Health", () => {
     it("calculates account health correctly with single collateral", () => {
       const collaterals = [createCollateral(100, 10, 0.8, 0.8)];
       const currentDebt = 500;
 
       const health = calculateAccountHealth(collaterals, currentDebt);
-
-      // Expected account health: (100 * 10 * 0.8) / 500 = 1.6
       expect(health).toBe(1.6);
     });
 
@@ -31,8 +29,6 @@ describe("Account Module", () => {
       const currentDebt = 1000;
 
       const health = calculateAccountHealth(collaterals, currentDebt);
-
-      // Expected account health: (100 * 10 * 0.8 + 200 * 5 * 0.7 + 50 * 20 * 0.9) / 1000 = 2.4
       expect(health).toBe(2.4);
     });
 
@@ -50,20 +46,60 @@ describe("Account Module", () => {
       const currentDebt = 1000;
 
       const health = calculateAccountHealth(collaterals, currentDebt);
-
       expect(health).toBe(0);
+    });
+
+    it("throws error for undefined liquidationLTV", () => {
+      const collaterals = [
+        {
+          amount: 100,
+          price: 10,
+          maxLTV: 0.8,
+        } as Collateral,
+      ];
+      const currentDebt = 500;
+
+      expect(() => calculateAccountHealth(collaterals, currentDebt)).toThrow(
+        "LiquidationLTV is not defined"
+      );
     });
   });
 
-  describe("calculateAccountLTV", () => {
+  describe("Total Collateral Value", () => {
+    it("calculates total value correctly with multiple collaterals", () => {
+      const collaterals = [
+        createCollateral(100, 10),
+        createCollateral(200, 5),
+        createCollateral(50, 20),
+      ];
+
+      const value = calculateTotalCollateralValue(collaterals);
+      expect(value).toBe(3000); // (100 * 10) + (200 * 5) + (50 * 20)
+    });
+
+    it("returns 0 for empty collateral list", () => {
+      expect(calculateTotalCollateralValue([])).toBe(0);
+    });
+
+    it("handles collaterals with zero amount or price", () => {
+      const collaterals = [
+        createCollateral(0, 10),
+        createCollateral(100, 0),
+        createCollateral(100, 10),
+      ];
+
+      const value = calculateTotalCollateralValue(collaterals);
+      expect(value).toBe(1000);
+    });
+  });
+
+  describe("Account LTV", () => {
     it("calculates account LTV correctly with single collateral", () => {
       const accountTotalDebt = 500;
       const collaterals = [createCollateral(100, 10, 0.7, 0.7)];
 
       const ltv = calculateAccountLTV(accountTotalDebt, collaterals);
-
-      // Expected LTV: 500 / (100 * 10) = 0.5
-      expect(ltv).toBe(0.5);
+      expect(ltv).toBe(0.5); // 500 / (100 * 10)
     });
 
     it("calculates account LTV correctly with multiple collaterals", () => {
@@ -75,8 +111,6 @@ describe("Account Module", () => {
       ];
 
       const ltv = calculateAccountLTV(accountTotalDebt, collaterals);
-
-      // Expected LTV: 1000 / (100 * 10 + 200 * 5 + 50 * 20) = 0.333
       expect(ltv).toBeCloseTo(0.333);
     });
 
@@ -85,18 +119,15 @@ describe("Account Module", () => {
       const collaterals: Collateral[] = [];
 
       const ltv = calculateAccountLTV(accountTotalDebt, collaterals);
-
       expect(ltv).toBe(0);
     });
   });
 
-  describe("calculateAccountMaxLTV", () => {
+  describe("Account Max LTV", () => {
     it("calculates account max LTV correctly with a single collateral", () => {
       const collaterals = [createCollateral(100, 10, 0.7, 0.7)];
 
       const ltv = calculateAccountMaxLTV(collaterals);
-
-      // Expected LTV: (100 * 10 * 0.7) / (100 * 10) = 0.7
       expect(ltv).toBe(0.7);
     });
 
@@ -110,9 +141,29 @@ describe("Account Module", () => {
       const ltv = calculateAccountMaxLTV(collaterals);
       expect(ltv).toBeCloseTo(0.6075);
     });
+
+    it("returns 0 when there are no collaterals", () => {
+      const collaterals: Collateral[] = [];
+      const ltv = calculateAccountMaxLTV(collaterals);
+      expect(ltv).toBe(0);
+    });
+
+    it("throws error for undefined maxLTV", () => {
+      const collaterals = [
+        {
+          amount: 100,
+          price: 10,
+          liquidationLTV: 0.8,
+        } as Collateral,
+      ];
+
+      expect(() => calculateAccountMaxLTV(collaterals)).toThrow(
+        "MaxLTV is not defined for one or more collaterals"
+      );
+    });
   });
 
-  describe("calculateAccountLiqLTV", () => {
+  describe("Account Liquidation LTV", () => {
     it("calculates account liq LTV correctly with multiple collaterals", () => {
       const collaterals = [
         createCollateral(100, 10, 0.7, 0.9),
@@ -199,34 +250,6 @@ describe("Account Module", () => {
       expect(() => calculateDrop(collaterals, currentDebt)).toThrow(
         "LiquidationLTV is not defined"
       );
-    });
-  });
-
-  describe("calculateTotalCollateralValue", () => {
-    it("calculates total value correctly with multiple collaterals", () => {
-      const collaterals = [
-        createCollateral(100, 10),
-        createCollateral(200, 5),
-        createCollateral(50, 20),
-      ];
-
-      const value = calculateTotalCollateralValue(collaterals);
-      expect(value).toBe(3000); // (100 * 10) + (200 * 5) + (50 * 20)
-    });
-
-    it("returns 0 for empty collateral list", () => {
-      expect(calculateTotalCollateralValue([])).toBe(0);
-    });
-
-    it("handles collaterals with zero amount or price", () => {
-      const collaterals = [
-        createCollateral(0, 10),
-        createCollateral(100, 0),
-        createCollateral(100, 10),
-      ];
-
-      const value = calculateTotalCollateralValue(collaterals);
-      expect(value).toBe(1000);
     });
   });
 

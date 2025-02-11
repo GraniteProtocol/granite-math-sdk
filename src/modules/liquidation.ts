@@ -4,7 +4,8 @@
  * This module handles liquidation-related calculations including:
  * - Maximum repayment amount calculations for liquidators
  * - Liquidation threshold checks
- * - Liquidation premium calculations
+ * - Liquidation trigger points
+ * - Price drop calculations
  *
  * The module provides essential functions for the liquidation process,
  * ensuring proper risk management and incentives for liquidators.
@@ -12,6 +13,65 @@
 
 import { Collateral, InterestRateParams } from "../types";
 import { convertDebtSharesToAssets } from "./borrow";
+import { calculateTotalCollateralValue } from "./account";
+
+/**
+ * Calculates the price drop percentage that would trigger liquidation
+ * @param collaterals - Array of collateral assets
+ * @param currentDebt - Current outstanding debt
+ * @returns The percentage drop in collateral value that would trigger liquidation
+ */
+export function calculateDrop(
+  collaterals: Collateral[],
+  currentDebt: number
+): number {
+  const totalCollateralValue = collaterals.reduce((total, collateral) => {
+    if (!collateral.liquidationLTV) {
+      throw new Error("LiquidationLTV is not defined");
+    }
+    return (
+      total + collateral.amount * collateral.price * collateral.liquidationLTV
+    );
+  }, 0);
+
+  if (totalCollateralValue == 0) {
+    return 0;
+  }
+
+  return 1 - currentDebt / totalCollateralValue;
+}
+
+/**
+ * Calculates the collateral value at which liquidation would be triggered
+ * @param accountLiqLTV - Account's liquidation LTV threshold
+ * @param debtShares - Amount of debt shares
+ * @param openInterest - Total outstanding loans
+ * @param totalDebtShares - Total debt shares in protocol
+ * @param totalAssets - Total assets in protocol
+ * @param irParams - Interest rate parameters
+ * @param timeDelta - Time elapsed since last interest accrual
+ * @returns The collateral value at which liquidation would occur
+ */
+export function calculateLiquidationPoint(
+  accountLiqLTV: number,
+  debtShares: number,
+  openInterest: number,
+  totalDebtShares: number,
+  totalAssets: number,
+  irParams: InterestRateParams,
+  timeDelta: number
+): number {
+  const accountDebt = convertDebtSharesToAssets(
+    debtShares,
+    openInterest,
+    totalDebtShares,
+    totalAssets,
+    irParams,
+    timeDelta
+  );
+
+  return accountLiqLTV !== 0 ? accountDebt / accountLiqLTV : 0;
+}
 
 /**
  * Calculates the maximum amount a liquidator can repay for a position
