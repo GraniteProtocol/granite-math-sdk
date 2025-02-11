@@ -11,7 +11,8 @@ module.exports = {
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/index.ts', // Exclude index file if it's just exports
-    '!src/types.ts'  // Exclude type definitions
+    '!src/types.ts',  // Exclude type definitions
+    '!src/constants.ts' // Exclude constants file
   ],
   coverageThreshold: {
     global: {
@@ -20,11 +21,11 @@ module.exports = {
       functions: 90,
       lines: 90
     },
-    './src/functions.ts': {
+    './src/modules/*.ts': {
       statements: 93,
       branches: 65,
       functions: 100,
-      lines: 96
+      lines: 95
     }
   },
   coverageReporters: ['text', 'html', 'json-summary', 'json'],

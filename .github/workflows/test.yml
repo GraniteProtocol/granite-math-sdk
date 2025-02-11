@@ -39,7 +39,7 @@ jobs:
           path: coverage/
           retention-days: 30
 
-      - name: Check Coverage of functions.ts
+      - name: Check Coverage of Modules
         run: |
           COVERAGE_FILE="coverage/coverage-summary.json"
           if [ ! -f "$COVERAGE_FILE" ]; then
@@ -48,22 +48,49 @@ jobs:
             exit 1
           fi
 
-          # Extract coverage for functions.ts
-          FUNCTIONS_COVERAGE=$(node -e "
+          # Extract coverage for all module files
+          MODULES_COVERAGE=$(node -e "
             const coverage = require('./$COVERAGE_FILE');
-            const functionsFile = Object.keys(coverage).find(key => key.endsWith('functions.ts'));
-            if (!functionsFile) {
-              console.log('functions.ts coverage not found');
+            const moduleFiles = Object.keys(coverage).filter(key => key.includes('/modules/'));
+            if (moduleFiles.length === 0) {
+              console.log('No module files coverage found');
               process.exit(1);
             }
-            const stats = coverage[functionsFile];
-            console.log(\`Functions.ts Coverage:
-            Statements: \${stats.statements.pct}%
-            Branches: \${stats.branches.pct}%
-            Functions: \${stats.functions.pct}%\`);
+            
+            let totalStats = {
+              statements: { total: 0, covered: 0 },
+              branches: { total: 0, covered: 0 },
+              functions: { total: 0, covered: 0 }
+            };
+            
+            moduleFiles.forEach(file => {
+              const stats = coverage[file];
+              totalStats.statements.total += stats.statements.total;
+              totalStats.statements.covered += stats.statements.covered;
+              totalStats.branches.total += stats.branches.total;
+              totalStats.branches.covered += stats.branches.covered;
+              totalStats.functions.total += stats.functions.total;
+              totalStats.functions.covered += stats.functions.covered;
+              
+              console.log(\`\n${file} Coverage:
+              Statements: \${stats.statements.pct}%
+              Branches: \${stats.branches.pct}%
+              Functions: \${stats.functions.pct}%\`);
+            });
+            
+            const avgStats = {
+              statements: (totalStats.statements.covered / totalStats.statements.total * 100).toFixed(2),
+              branches: (totalStats.branches.covered / totalStats.branches.total * 100).toFixed(2),
+              functions: (totalStats.functions.covered / totalStats.functions.total * 100).toFixed(2)
+            };
+            
+            console.log(\`\nOverall Modules Coverage:
+            Statements: \${avgStats.statements}%
+            Branches: \${avgStats.branches}%
+            Functions: \${avgStats.functions}%\`);
           ")
 
-          echo "$FUNCTIONS_COVERAGE"
+          echo "$MODULES_COVERAGE"
 
       - name: Comment PR with Coverage
         if: github.event_name == 'pull_request'
@@ -75,24 +102,61 @@ jobs:
 
             try {
               const coverage = JSON.parse(fs.readFileSync(coverageFile, 'utf8'));
-              const functionsFile = Object.keys(coverage).find(key => key.endsWith('functions.ts'));
+              const moduleFiles = Object.keys(coverage).filter(key => key.includes('/modules/'));
               
-              if (!functionsFile) {
-                throw new Error('functions.ts coverage not found');
+              if (moduleFiles.length === 0) {
+                throw new Error('No module files coverage found');
               }
               
-              const stats = coverage[functionsFile];
+              let totalStats = {
+                statements: { total: 0, covered: 0 },
+                branches: { total: 0, covered: 0 },
+                functions: { total: 0, covered: 0 },
+                lines: { total: 0, covered: 0 }
+              };
               
-              const comment = `## Coverage Report for functions.ts
+              const moduleStats = moduleFiles.map(file => {
+                const stats = coverage[file];
+                totalStats.statements.total += stats.statements.total;
+                totalStats.statements.covered += stats.statements.covered;
+                totalStats.branches.total += stats.branches.total;
+                totalStats.branches.covered += stats.branches.covered;
+                totalStats.functions.total += stats.functions.total;
+                totalStats.functions.covered += stats.functions.covered;
+                totalStats.lines.total += stats.lines.total;
+                totalStats.lines.covered += stats.lines.covered;
+                
+                return `### ${file.split('/').pop()}
+                | Metric | Coverage |
+                |--------|----------|
+                | Statements | ${stats.statements.pct}% |
+                | Branches | ${stats.branches.pct}% |
+                | Functions | ${stats.functions.pct}% |
+                | Lines | ${stats.lines.pct}% |
+                `;
+              });
               
-              | Metric | Coverage |
-              |--------|----------|
-              | Statements | ${stats.statements.pct}% |
-              | Branches | ${stats.branches.pct}% |
-              | Functions | ${stats.functions.pct}% |
-              | Lines | ${stats.lines.pct}% |
+              const avgStats = {
+                statements: (totalStats.statements.covered / totalStats.statements.total * 100).toFixed(2),
+                branches: (totalStats.branches.covered / totalStats.branches.total * 100).toFixed(2),
+                functions: (totalStats.functions.covered / totalStats.functions.total * 100).toFixed(2),
+                lines: (totalStats.lines.covered / totalStats.lines.total * 100).toFixed(2)
+              };
               
-              ${stats.statements.pct < 90 || stats.branches.pct < 65 || stats.functions.pct < 100 ? '⚠️ Coverage is below threshold!' : '✅ Coverage meets all thresholds!'}
+              const comment = `## Coverage Report for Modules
+
+              ### Overall Coverage
+              | Metric | Coverage | Threshold |
+              |--------|----------|-----------|
+              | Statements | ${avgStats.statements}% | 93% |
+              | Branches | ${avgStats.branches}% | 65% |
+              | Functions | ${avgStats.functions}% | 100% |
+              | Lines | ${avgStats.lines}% | 96% |
+              
+              ${Number(avgStats.statements) < 93 || Number(avgStats.branches) < 65 || Number(avgStats.functions) < 100 || Number(avgStats.lines) < 96 ? '⚠️ Coverage is below threshold!' : '✅ Coverage meets all thresholds!'}
+
+              ### Individual Module Coverage
+              ${moduleStats.join('\n\n')}
               `;
               
               await github.rest.issues.createComment({
