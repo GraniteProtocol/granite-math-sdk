@@ -13,7 +13,6 @@
 
 import { Collateral, InterestRateParams } from "../types";
 import { convertDebtSharesToAssets } from "./borrow";
-import { calculateTotalCollateralValue } from "./account";
 
 /**
  * Calculates the price drop percentage that would trigger liquidation
@@ -23,7 +22,7 @@ import { calculateTotalCollateralValue } from "./account";
  */
 export function calculateDrop(
   collaterals: Collateral[],
-  currentDebt: number
+  currentDebt: number,
 ): number {
   const totalCollateralValue = collaterals.reduce((total, collateral) => {
     if (!collateral.liquidationLTV) {
@@ -59,7 +58,7 @@ export function calculateLiquidationPoint(
   totalDebtShares: number,
   totalAssets: number,
   irParams: InterestRateParams,
-  timeDelta: number
+  timeDelta: number,
 ): number {
   const accountDebt = convertDebtSharesToAssets(
     debtShares,
@@ -67,7 +66,7 @@ export function calculateLiquidationPoint(
     totalDebtShares,
     totalAssets,
     irParams,
-    timeDelta
+    timeDelta,
   );
 
   return accountLiqLTV !== 0 ? accountDebt / accountLiqLTV : 0;
@@ -92,7 +91,7 @@ export const liquidatorMaxRepayAmount = (
   totalAssets: number,
   irParams: InterestRateParams,
   timeDelta: number,
-  collateral: Collateral
+  collateral: Collateral,
 ) => {
   if (!collateral.liquidationLTV || !collateral.liquidationPremium)
     throw new Error("Liquidation LTV or liquidation premium are not defined");
@@ -102,7 +101,7 @@ export const liquidatorMaxRepayAmount = (
     totalDebtShares,
     totalAssets,
     irParams,
-    timeDelta
+    timeDelta,
   );
   const collateralValue = collateral.amount * collateral.price;
 

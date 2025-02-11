@@ -42,7 +42,7 @@ describe("Liquidation Module", () => {
       const currentDebt = 500;
 
       expect(() => calculateDrop(collaterals, currentDebt)).toThrow(
-        "LiquidationLTV is not defined"
+        "LiquidationLTV is not defined",
       );
     });
   });
@@ -56,7 +56,7 @@ describe("Liquidation Module", () => {
         1000, // total debt shares
         10000, // total assets (10% utilization rate)
         defaultIrParams,
-        1 // second
+        1, // second
       );
       expect(lp).toBeCloseTo(125);
     });
@@ -69,7 +69,7 @@ describe("Liquidation Module", () => {
         1000,
         10000,
         defaultIrParams,
-        1
+        1,
       );
       expect(lp).toBe(0);
     });
@@ -92,7 +92,7 @@ describe("Liquidation Module", () => {
         20000,
         defaultIrParams,
         3600,
-        collateral
+        collateral,
       );
 
       expect(amt).toBeCloseTo(1023.9);
@@ -113,8 +113,8 @@ describe("Liquidation Module", () => {
           20000,
           defaultIrParams,
           3600,
-          collateral
-        )
+          collateral,
+        ),
       ).toThrow("Liquidation LTV or liquidation premium are not defined");
     });
 
@@ -134,7 +134,7 @@ describe("Liquidation Module", () => {
         20000,
         defaultIrParams,
         3600,
-        collateral
+        collateral,
       );
 
       expect(amt).toBeGreaterThan(0);
@@ -156,7 +156,7 @@ describe("Liquidation Module", () => {
         100000,
         defaultIrParams,
         3600,
-        collateral
+        collateral,
       );
 
       const highUtilization = liquidatorMaxRepayAmount(
@@ -166,7 +166,7 @@ describe("Liquidation Module", () => {
         100000,
         defaultIrParams,
         3600,
-        collateral
+        collateral,
       );
 
       expect(highUtilization).toBeGreaterThan(lowUtilization);
