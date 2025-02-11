@@ -1,7 +1,30 @@
+/**
+ * LP (Liquidity Provider) Module
+ *
+ * This module handles liquidity provider-related calculations including:
+ * - Converting between LP assets and shares
+ * - APY calculations for liquidity providers
+ * - Total earnings calculations
+ *
+ * The module uses share-based accounting to track LP positions,
+ * allowing for automatic interest distribution through share price appreciation.
+ */
+
 import { InterestRateParams } from "../types";
 import { secondsInAYear } from "../constants";
 import { annualizedAPR, compoundedInterest } from "./borrow";
 
+/**
+ * Converts LP assets to shares based on the current share price
+ * @param assets - Amount of assets to convert to shares
+ * @param totalShares - Total LP shares in the protocol
+ * @param totalAssets - Total assets in the protocol
+ * @param openInterest - Total outstanding loans
+ * @param protocolReservePercentage - Percentage of interest that goes to protocol reserves
+ * @param irParams - Interest rate parameters
+ * @param timeDelta - Time elapsed since last interest accrual
+ * @returns The equivalent amount of LP shares
+ */
 export function convertLpAssetsToShares(
   assets: number,
   totalShares: number,
@@ -26,6 +49,17 @@ export function convertLpAssetsToShares(
   return (assets * totalShares) / (accruedInterest + totalAssets);
 }
 
+/**
+ * Converts LP shares to assets based on the current share price
+ * @param shares - Amount of shares to convert to assets
+ * @param totalShares - Total LP shares in the protocol
+ * @param totalAssets - Total assets in the protocol
+ * @param openInterest - Total outstanding loans
+ * @param protocolReservePercentage - Percentage of interest that goes to protocol reserves
+ * @param irParams - Interest rate parameters
+ * @param timeDelta - Time elapsed since last interest accrual
+ * @returns The equivalent amount of assets
+ */
 export function convertLpSharesToAssets(
   shares: number,
   totalShares: number,
@@ -50,6 +84,13 @@ export function convertLpSharesToAssets(
   return (shares * (accruedInterest + totalAssets)) / totalShares;
 }
 
+/**
+ * Calculates the Annual Percentage Yield (APY) for liquidity providers
+ * @param ur - Current utilization rate
+ * @param irParams - Interest rate parameters
+ * @param protocolReservePercentage - Percentage of interest that goes to protocol reserves
+ * @returns The APY for liquidity providers
+ */
 export function calculateLpAPY(
   ur: number,
   irParams: InterestRateParams,
@@ -63,6 +104,18 @@ export function calculateLpAPY(
   }
 }
 
+/**
+ * Computes the total earnings for a liquidity provider
+ * @param shares - Amount of LP shares
+ * @param totalShares - Total LP shares in the protocol
+ * @param totalAssets - Total assets in the protocol
+ * @param openInterest - Total outstanding loans
+ * @param protocolReservePercentage - Percentage of interest that goes to protocol reserves
+ * @param irParams - Interest rate parameters
+ * @param reserveBalance - Protocol's reserve balance
+ * @param timeDelta - Time elapsed since last interest accrual
+ * @returns The total earnings in asset terms
+ */
 export function computeTotalEarning(
   shares: number,
   totalShares: number,
