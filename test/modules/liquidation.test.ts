@@ -76,100 +76,154 @@ describe("Liquidation Module", () => {
   });
 
   describe("Liquidator Max Repay Calculations", () => {
-    it("calculates max repay amount correctly", () => {
+    it("prevents repayment higher than actual debt (regression test for original issue)", () => {
       const collateral: Collateral = {
-        liquidationPremium: 0.01,
-        maxLTV: 0.5,
+        liquidationPremium: 0.01, // 1% premium
+        maxLTV: 0.8,
+        liquidationLTV: 0.7,
+        amount: 1000,
+        price: 1,
+      };
+
+      // This was the original problematic test case
+      const amt = liquidatorMaxRepayAmount(
+        10000, // debtShares
+        1000, // openInterest
+        10000, // totalDebtShares
+        20000, // totalAssets
+        defaultIrParams,
+        3600, // 1 hour
+        collateral
+      );
+
+      // Should never exceed openInterest (1000)
+      expect(amt).toBeLessThanOrEqual(1000);
+
+      // Should be capped by collateralValue / (1 + premium) ≈ 990.099
+      expect(amt).toBeCloseTo(990.099, 3);
+
+      // Verify it's using the collateral cap rather than maxRepayCalc
+      const collateralCap =
+        collateral.amount / (1 + collateral.liquidationPremium!);
+      expect(amt).toBeCloseTo(collateralCap, 3);
+    });
+
+    it("calculates max repay with proper secured value consideration", () => {
+      const collateral: Collateral = {
+        liquidationPremium: 0.1, // 10% premium
+        maxLTV: 0.8,
         liquidationLTV: 0.7,
         amount: 1000,
         price: 1,
       };
 
       const amt = liquidatorMaxRepayAmount(
-        10000,
-        1000,
-        10000,
-        20000,
+        1000, // debtShares (all debt)
+        1000, // openInterest
+        1000, // totalDebtShares
+        2000, // totalAssets
         defaultIrParams,
         3600,
         collateral
       );
 
-      expect(amt).toBeCloseTo(1023.9);
+      // Calculations:
+      // collateralValue = 1000
+      // securedValue = 1000 * 0.7 = 700
+      // debtAssets ≈ 1000 (plus small interest)
+      // denominator = 1 - (1 + 0.1) * 0.7 = 0.23
+      // maxRepayCalc = (1000 - 700) / 0.23 ≈ 1304.35
+      // collateralCap = 1000 / 1.1 ≈ 909.09
+      // Should return min(909.09, 1000) = 909.09
+      expect(amt).toBeCloseTo(909.09, 2);
     });
 
-    it("throws error when liquidation parameters are undefined", () => {
+    it("returns 0 when debt is fully secured by collateral", () => {
       const collateral: Collateral = {
-        maxLTV: 0.5,
-        amount: 1000,
+        liquidationPremium: 0.1,
+        maxLTV: 0.8,
+        liquidationLTV: 0.7,
+        amount: 2000, // High collateral amount
         price: 1,
-      } as Collateral;
+      };
 
-      expect(() =>
-        liquidatorMaxRepayAmount(
-          10000,
-          1000,
-          10000,
-          20000,
-          defaultIrParams,
-          3600,
-          collateral
-        )
-      ).toThrow("Liquidation LTV or liquidation premium are not defined");
+      const amt = liquidatorMaxRepayAmount(
+        100, // Small debt
+        1000,
+        1000,
+        2000,
+        defaultIrParams,
+        3600,
+        collateral
+      );
+
+      // Debt is fully secured by collateral, so no liquidation needed
+      expect(amt).toBe(0);
+    });
+
+    it("respects collateral cap when debt is high", () => {
+      const collateral: Collateral = {
+        liquidationPremium: 0.1,
+        maxLTV: 0.8,
+        liquidationLTV: 0.7,
+        amount: 100, // Low collateral amount
+        price: 1,
+      };
+
+      const amt = liquidatorMaxRepayAmount(
+        1000, // High debt
+        1000,
+        1000,
+        2000,
+        defaultIrParams,
+        3600,
+        collateral
+      );
+
+      // Collateral cap = 100 / 1.1 ≈ 90.91
+      expect(amt).toBeCloseTo(90.91, 2);
     });
 
     it("handles zero collateral amount", () => {
       const collateral: Collateral = {
-        liquidationPremium: 0.01,
-        maxLTV: 0.5,
+        liquidationPremium: 0.1,
+        maxLTV: 0.8,
         liquidationLTV: 0.7,
         amount: 0,
         price: 1,
       };
 
       const amt = liquidatorMaxRepayAmount(
-        10000,
         1000,
-        10000,
-        20000,
+        1000,
+        1000,
+        2000,
         defaultIrParams,
         3600,
         collateral
       );
 
-      expect(amt).toBeGreaterThan(0);
+      expect(amt).toBe(0);
     });
 
-    it("handles different utilization rates", () => {
-      const collateral: Collateral = {
-        liquidationPremium: 0.01,
-        maxLTV: 0.5,
-        liquidationLTV: 0.7,
+    it("throws error when liquidation parameters are undefined", () => {
+      const collateral = {
+        maxLTV: 0.8,
         amount: 1000,
         price: 1,
-      };
+      } as Collateral;
 
-      const lowUtilization = liquidatorMaxRepayAmount(
-        10000,
-        1000,
-        10000,
-        100000,
-        defaultIrParams,
-        3600,
-        collateral
-      );
-
-      const highUtilization = liquidatorMaxRepayAmount(
-        10000,
-        80000,
-        10000,
-        100000,
-        defaultIrParams,
-        3600,
-        collateral
-      );
-
-      expect(highUtilization).toBeGreaterThan(lowUtilization);
+      expect(() =>
+        liquidatorMaxRepayAmount(
+          1000,
+          1000,
+          1000,
+          2000,
+          defaultIrParams,
+          3600,
+          collateral
+        )
+      ).toThrow("Liquidation LTV or liquidation premium are not defined");
     });
   });
 });

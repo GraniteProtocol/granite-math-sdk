@@ -96,6 +96,8 @@ export const liquidatorMaxRepayAmount = (
 ) => {
   if (!collateral.liquidationLTV || !collateral.liquidationPremium)
     throw new Error("Liquidation LTV or liquidation premium are not defined");
+
+  // Calculate total debt including accrued interest
   const debtAssets = convertDebtSharesToAssets(
     debtShares,
     openInterest,
@@ -104,10 +106,21 @@ export const liquidatorMaxRepayAmount = (
     irParams,
     timeDelta
   );
+
   const collateralValue = collateral.amount * collateral.price;
 
-  return (
-    (debtAssets - collateralValue * collateral.liquidationLTV) /
-    (1 - (1 + collateral.liquidationPremium) * collateral.liquidationLTV)
-  );
+  // Calculate secured value of this collateral (value_i × liqLTV_i)
+  const securedValue = collateralValue * collateral.liquidationLTV;
+
+  // Calculate maxRepayCalc according to formula:
+  // (debt – Σ(value_i × liqLTV_i)) / (1 – (1 + liqDiscount_x) × liqLTV_x)
+  const denominator =
+    1 - (1 + collateral.liquidationPremium) * collateral.liquidationLTV;
+  const maxRepayCalc = (debtAssets - securedValue) / denominator;
+
+  // Calculate the collateral-based cap
+  const collateralCap = collateralValue / (1 + collateral.liquidationPremium);
+
+  // Return max(min(maxRepayCalc, collateralCap), 0)
+  return Math.max(Math.min(maxRepayCalc, collateralCap), 0);
 };
