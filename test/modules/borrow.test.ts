@@ -44,7 +44,7 @@ describe("Borrow and Debt Module", () => {
   describe("Interest Calculations", () => {
     it("calculates due interest correctly", () => {
       expect(
-        calculateDueInterest(1, 500, 500, defaultIrParams, 6000)
+        calculateDueInterest(1, 500, 500, defaultIrParams, 6000),
       ).toBeCloseTo(1.0002853);
     });
 
@@ -55,7 +55,7 @@ describe("Borrow and Debt Module", () => {
         500,
         500,
         defaultIrParams,
-        6000
+        6000,
       );
       expect(principal - interest).toBe(1);
     });
@@ -112,7 +112,7 @@ describe("Borrow and Debt Module", () => {
         10000, // openInterest
         0.1, // protocolReservePercentage
         defaultIrParams,
-        3600 // 1 hour
+        3600, // 1 hour
       );
       expect(result).toBeGreaterThan(0);
       expect(result).toBeLessThan(1000); // Should be less due to interest accrual
@@ -126,7 +126,7 @@ describe("Borrow and Debt Module", () => {
         10000,
         0.1,
         defaultIrParams,
-        3600
+        3600,
       );
       expect(result).toBe(0);
     });
@@ -139,7 +139,7 @@ describe("Borrow and Debt Module", () => {
         10000,
         0.1,
         defaultIrParams,
-        3600
+        3600,
       );
       expect(result).toBe(0);
     });
@@ -152,7 +152,7 @@ describe("Borrow and Debt Module", () => {
         10000,
         0.1,
         defaultIrParams,
-        3600
+        3600,
       );
 
       const withoutReserve = convertDebtAssetsToShares(
@@ -162,7 +162,7 @@ describe("Borrow and Debt Module", () => {
         10000,
         0,
         defaultIrParams,
-        3600
+        3600,
       );
 
       expect(withReserve).toBeGreaterThan(withoutReserve);
@@ -175,7 +175,7 @@ describe("Borrow and Debt Module", () => {
         10000, // totalDebtShares
         20000, // totalAssets
         defaultIrParams,
-        3600 // 1 hour
+        3600, // 1 hour
       );
       expect(result).toBeGreaterThan(1000); // Should be more due to interest accrual
     });
@@ -187,7 +187,7 @@ describe("Borrow and Debt Module", () => {
         0, // totalDebtShares = 0
         20000,
         defaultIrParams,
-        3600
+        3600,
       );
       expect(result).toBe(0);
     });
@@ -199,7 +199,7 @@ describe("Borrow and Debt Module", () => {
         10000,
         100000, // totalAssets (1% utilization)
         defaultIrParams,
-        3600
+        3600,
       );
 
       const highUtilization = convertDebtSharesToAssets(
@@ -208,7 +208,7 @@ describe("Borrow and Debt Module", () => {
         10000,
         100000, // totalAssets (80% utilization)
         defaultIrParams,
-        3600
+        3600,
       );
 
       expect(highUtilization).toBeGreaterThan(lowUtilization);
@@ -223,7 +223,7 @@ describe("Borrow and Debt Module", () => {
         10000,
         0,
         defaultIrParams,
-        3600
+        3600,
       );
       const finalAssets = convertDebtSharesToAssets(
         shares,
@@ -231,7 +231,7 @@ describe("Borrow and Debt Module", () => {
         10000,
         20000,
         defaultIrParams,
-        3600
+        3600,
       );
       expect(finalAssets).toBeCloseTo(initialAssets);
     });
@@ -253,7 +253,7 @@ describe("Borrow and Debt Module", () => {
         },
       ];
       expect(() => calculateBorrowCapacity(collaterals)).toThrow(
-        "Collateral max LTV is not defined"
+        "Collateral max LTV is not defined",
       );
     });
 
@@ -282,7 +282,7 @@ describe("Borrow and Debt Module", () => {
         collaterals,
         freeLiquidity,
         reserveBalance,
-        40
+        40,
       );
       expect(result).toBe(8);
     });
@@ -298,7 +298,7 @@ describe("Borrow and Debt Module", () => {
         10000, // totalDebtShares
         20000, // totalAssets
         defaultIrParams,
-        2592000 // seconds in one month
+        2592000, // seconds in one month
       );
       expect(result).toBeCloseTo(1074.596, 3);
     });
@@ -310,7 +310,7 @@ describe("Borrow and Debt Module", () => {
         10000,
         20000,
         defaultIrParams,
-        2592000
+        2592000,
       );
       expect(result).toBe(0);
     });
@@ -322,7 +322,7 @@ describe("Borrow and Debt Module", () => {
         0,
         20000,
         defaultIrParams,
-        2592000
+        2592000,
       );
       expect(result).toBe(0);
     });

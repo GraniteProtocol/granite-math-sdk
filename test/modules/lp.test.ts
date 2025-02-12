@@ -25,21 +25,21 @@ describe("LP Module", () => {
 
     it("convertLpAssetsToShares with standard values", () => {
       expect(convertLpAssetsToShares(100, 8000, 10000, 0, 0, irParams, 0)).toBe(
-        80
+        80,
       );
     });
 
     it("convertLpAssetsToShares with interest accrual", () => {
       // LP share value increases
       expect(
-        convertLpAssetsToShares(100, 8000, 10000, 1000, 0, irParams, 6000)
+        convertLpAssetsToShares(100, 8000, 10000, 1000, 0, irParams, 6000),
       ).toBeLessThan(80);
     });
 
     it("convertLpSharesToAssets reflects interest accrual", () => {
       // LP assets should have increased in number
       expect(
-        convertLpSharesToAssets(80, 8000, 10000, 1000, 0, irParams, 6000)
+        convertLpSharesToAssets(80, 8000, 10000, 1000, 0, irParams, 6000),
       ).toBeGreaterThan(80);
     });
 
@@ -51,7 +51,7 @@ describe("LP Module", () => {
         1000,
         0.1,
         irParams,
-        6000
+        6000,
       );
       const withoutReserve = convertLpAssetsToShares(
         100,
@@ -60,7 +60,7 @@ describe("LP Module", () => {
         1000,
         0,
         irParams,
-        6000
+        6000,
       );
       expect(withReserve).toBeGreaterThan(withoutReserve);
     });
@@ -88,7 +88,7 @@ describe("LP Module", () => {
       const result = calculateLpAPY(
         utilizationRate,
         irParams,
-        protocolReservePercentage
+        protocolReservePercentage,
       );
       expect(result).toBeGreaterThan(0);
     });
@@ -115,7 +115,7 @@ describe("LP Module", () => {
         0.1, // protocolReservePercentage
         irParams,
         2000, // reserveBalance
-        6000 // timeDelta
+        6000, // timeDelta
       );
       expect(result).toBe(0);
     });
@@ -129,7 +129,7 @@ describe("LP Module", () => {
         0.1,
         irParams,
         500,
-        6000
+        6000,
       );
       expect(result).toBeGreaterThan(0);
     });
@@ -143,7 +143,7 @@ describe("LP Module", () => {
         0.1,
         irParams,
         100,
-        6000
+        6000,
       );
       expect(result).toBe(0);
     });

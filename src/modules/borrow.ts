@@ -28,7 +28,7 @@ import { secondsInAYear } from "../constants";
  */
 export function computeUtilizationRate(
   openInterest: number,
-  totalAssets: number
+  totalAssets: number,
 ): number {
   if (totalAssets == 0) return 0;
   return openInterest / totalAssets;
@@ -66,7 +66,7 @@ export function calculateDueInterest(
   openInterest: number,
   totalAssets: number,
   irParams: InterestRateParams,
-  timeDelta: number
+  timeDelta: number,
 ): number {
   const ur: number = computeUtilizationRate(openInterest, totalAssets);
   const ir = annualizedAPR(ur, irParams);
@@ -88,7 +88,7 @@ export function compoundedInterest(
   openInterest: number,
   totalAssets: number,
   irParams: InterestRateParams,
-  timeDelta: number
+  timeDelta: number,
 ): number {
   const ur: number = computeUtilizationRate(openInterest, totalAssets);
   const ir = annualizedAPR(ur, irParams);
@@ -130,7 +130,7 @@ export function convertDebtAssetsToShares(
   openInterest: number,
   protocolReservePercentage: number,
   irParams: InterestRateParams,
-  timeDelta: number
+  timeDelta: number,
 ): number {
   if (totalAssets == 0) return 0;
 
@@ -139,7 +139,7 @@ export function convertDebtAssetsToShares(
     openInterest,
     totalAssets,
     irParams,
-    timeDelta
+    timeDelta,
   );
   const accruedInterest =
     corretedOpenInterest * (1 - protocolReservePercentage);
@@ -163,7 +163,7 @@ export function convertDebtSharesToAssets(
   totalDebtShares: number,
   totalAssets: number,
   irParams: InterestRateParams,
-  timeDelta: number
+  timeDelta: number,
 ): number {
   if (totalDebtShares == 0) return 0;
 
@@ -172,7 +172,7 @@ export function convertDebtSharesToAssets(
     openInterest,
     totalAssets,
     irParams,
-    timeDelta
+    timeDelta,
   );
 
   return (debtShares * (openInterest + accruedInterest)) / totalDebtShares;
@@ -205,7 +205,7 @@ export function calculateBorrowCapacity(collaterals: Collateral[]): number {
  */
 export function protocolAvailableToBorrow(
   freeLiquidity: number,
-  reserveBalance: number
+  reserveBalance: number,
 ): number {
   if (reserveBalance >= freeLiquidity) return 0;
 
@@ -224,15 +224,15 @@ export function userAvailableToBorrow(
   collaterals: Collateral[],
   freeLiquidity: number,
   reserveBalance: number,
-  currentDebt: number
+  currentDebt: number,
 ): number {
   const protocolFreeLiquidity = protocolAvailableToBorrow(
     freeLiquidity,
-    reserveBalance
+    reserveBalance,
   );
   return Math.min(
     protocolFreeLiquidity,
-    Math.max(calculateBorrowCapacity(collaterals) - currentDebt, 0)
+    Math.max(calculateBorrowCapacity(collaterals) - currentDebt, 0),
   );
 }
 
@@ -254,7 +254,7 @@ export function calculateMaxRepayAmount(
   totalDebtShares: number,
   totalAssets: number,
   irParams: InterestRateParams,
-  timeDelta: number
+  timeDelta: number,
 ): number {
   const ur = computeUtilizationRate(openInterest, totalAssets);
   const borrowAPY = calculateBorrowAPY(ur, irParams);
@@ -265,7 +265,7 @@ export function calculateMaxRepayAmount(
     totalDebtShares,
     totalAssets,
     irParams,
-    timeDelta
+    timeDelta,
   );
   const repayMultiplier = 1 + (borrowAPY / secondsInAYear) * (10 * 60);
 
