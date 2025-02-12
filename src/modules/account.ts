@@ -18,7 +18,7 @@ import { Collateral } from "../types";
  * @returns The sum of all collateral values (amount * price)
  */
 export function calculateTotalCollateralValue(
-  collaterals: Collateral[]
+  collaterals: Collateral[],
 ): number {
   return collaterals.reduce((total, collateral) => {
     return total + collateral.amount * collateral.price;
@@ -34,7 +34,7 @@ export function calculateTotalCollateralValue(
  */
 export function calculateAccountHealth(
   collaterals: Collateral[],
-  currentDebt: number
+  currentDebt: number,
 ): number {
   const totalCollateralValue = collaterals.reduce((total, collateral) => {
     if (!collateral.liquidationLTV) {
@@ -60,7 +60,7 @@ export function calculateAccountHealth(
  */
 export function calculateAccountLTV(
   accountTotalDebt: number,
-  collaterals: Collateral[]
+  collaterals: Collateral[],
 ): number {
   const accountCollateralValue = calculateTotalCollateralValue(collaterals);
 

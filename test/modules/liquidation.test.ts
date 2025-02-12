@@ -42,7 +42,7 @@ describe("Liquidation Module", () => {
       const currentDebt = 500;
 
       expect(() => calculateDrop(collaterals, currentDebt)).toThrow(
-        "LiquidationLTV is not defined"
+        "LiquidationLTV is not defined",
       );
     });
   });
@@ -56,7 +56,7 @@ describe("Liquidation Module", () => {
         1000, // total debt shares
         10000, // total assets (10% utilization rate)
         defaultIrParams,
-        1 // second
+        1, // second
       );
       expect(lp).toBeCloseTo(125);
     });
@@ -69,7 +69,7 @@ describe("Liquidation Module", () => {
         1000,
         10000,
         defaultIrParams,
-        1
+        1,
       );
       expect(lp).toBe(0);
     });
@@ -154,7 +154,7 @@ describe("Liquidation Module", () => {
         2000,
         defaultIrParams,
         3600,
-        collateral
+        collateral,
       );
 
       // Debt is fully secured by collateral, so no liquidation needed
@@ -177,7 +177,7 @@ describe("Liquidation Module", () => {
         2000,
         defaultIrParams,
         3600,
-        collateral
+        collateral,
       );
 
       // Collateral cap = 100 / 1.1 ≈ 90.91
@@ -200,7 +200,7 @@ describe("Liquidation Module", () => {
         2000,
         defaultIrParams,
         3600,
-        collateral
+        collateral,
       );
 
       expect(amt).toBe(0);

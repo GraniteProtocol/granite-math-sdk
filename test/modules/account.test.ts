@@ -37,7 +37,7 @@ describe("Account Module", () => {
       const currentDebt = 0;
 
       expect(() => calculateAccountHealth(collaterals, currentDebt)).toThrow(
-        "Current debt cannot be zero"
+        "Current debt cannot be zero",
       );
     });
 
@@ -60,7 +60,7 @@ describe("Account Module", () => {
       const currentDebt = 500;
 
       expect(() => calculateAccountHealth(collaterals, currentDebt)).toThrow(
-        "LiquidationLTV is not defined"
+        "LiquidationLTV is not defined",
       );
     });
   });
@@ -158,7 +158,7 @@ describe("Account Module", () => {
       ];
 
       expect(() => calculateAccountMaxLTV(collaterals)).toThrow(
-        "MaxLTV is not defined for one or more collaterals"
+        "MaxLTV is not defined for one or more collaterals",
       );
     });
   });
@@ -191,7 +191,7 @@ describe("Account Module", () => {
       ];
 
       expect(() => calculateAccountLiqLTV(collaterals)).toThrow(
-        "LiquidationLTV is not defined"
+        "LiquidationLTV is not defined",
       );
     });
   });
@@ -214,7 +214,7 @@ describe("Account Module", () => {
         1000, // total debt shares
         10000, // total assets (10% utilization rate)
         irParams,
-        1 // second
+        1, // second
       );
       expect(lp).toBeCloseTo(125);
     });
@@ -248,7 +248,7 @@ describe("Account Module", () => {
       const currentDebt = 500;
 
       expect(() => calculateDrop(collaterals, currentDebt)).toThrow(
-        "LiquidationLTV is not defined"
+        "LiquidationLTV is not defined",
       );
     });
   });
@@ -270,7 +270,7 @@ describe("Account Module", () => {
       ];
 
       expect(() => calculateAccountMaxLTV(collaterals)).toThrow(
-        "MaxLTV is not defined for one or more collaterals"
+        "MaxLTV is not defined for one or more collaterals",
       );
     });
 
@@ -289,7 +289,7 @@ describe("Account Module", () => {
         1000,
         10000,
         irParams,
-        1
+        1,
       );
       expect(lp).toBe(0);
     });

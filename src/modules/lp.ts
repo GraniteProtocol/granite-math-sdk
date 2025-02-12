@@ -32,7 +32,7 @@ export function convertLpAssetsToShares(
   openInterest: number,
   protocolReservePercentage: number,
   irParams: InterestRateParams,
-  timeDelta: number
+  timeDelta: number,
 ): number {
   if (totalAssets == 0) return 0;
 
@@ -41,7 +41,7 @@ export function convertLpAssetsToShares(
     openInterest,
     totalAssets,
     irParams,
-    timeDelta
+    timeDelta,
   );
   const accruedInterest =
     corretedOpenInterest * (1 - protocolReservePercentage);
@@ -67,7 +67,7 @@ export function convertLpSharesToAssets(
   openInterest: number,
   protocolReservePercentage: number,
   irParams: InterestRateParams,
-  timeDelta: number
+  timeDelta: number,
 ): number {
   if (totalShares == 0) return 0;
 
@@ -76,7 +76,7 @@ export function convertLpSharesToAssets(
     openInterest,
     totalAssets,
     irParams,
-    timeDelta
+    timeDelta,
   );
   const accruedInterest =
     corretedOpenInterest * (1 - protocolReservePercentage);
@@ -94,7 +94,7 @@ export function convertLpSharesToAssets(
 export function calculateLpAPY(
   ur: number,
   irParams: InterestRateParams,
-  protocolReservePercentage: number
+  protocolReservePercentage: number,
 ) {
   if (ur == 0) return 0;
   else {
@@ -124,7 +124,7 @@ export function computeTotalEarning(
   protocolReservePercentage: number,
   irParams: InterestRateParams,
   reserveBalance: number,
-  timeDelta: number
+  timeDelta: number,
 ): number {
   return Math.max(
     0,
@@ -135,7 +135,7 @@ export function computeTotalEarning(
       openInterest,
       protocolReservePercentage,
       irParams,
-      timeDelta
-    ) - reserveBalance
+      timeDelta,
+    ) - reserveBalance,
   );
 }
