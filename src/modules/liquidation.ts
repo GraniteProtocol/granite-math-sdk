@@ -22,7 +22,7 @@ import { convertDebtSharesToAssets } from "./borrow";
  */
 export function calculateDrop(
   collaterals: Collateral[],
-  currentDebt: number,
+  currentDebt: number
 ): number {
   const totalCollateralValue = collaterals.reduce((total, collateral) => {
     if (!collateral.liquidationLTV) {
@@ -58,7 +58,7 @@ export function calculateLiquidationPoint(
   totalDebtShares: number,
   totalAssets: number,
   irParams: InterestRateParams,
-  timeDelta: number,
+  timeDelta: number
 ): number {
   const accountDebt = convertDebtSharesToAssets(
     debtShares,
@@ -66,7 +66,7 @@ export function calculateLiquidationPoint(
     totalDebtShares,
     totalAssets,
     irParams,
-    timeDelta,
+    timeDelta
   );
 
   return accountLiqLTV !== 0 ? accountDebt / accountLiqLTV : 0;
@@ -81,6 +81,7 @@ export function calculateLiquidationPoint(
  * @param irParams - Interest rate parameters
  * @param timeDelta - Time elapsed since last interest accrual
  * @param collateral - The collateral asset being liquidated
+ * @param allCollaterals - Array of all collateral assets in the position
  * @returns The maximum amount that can be repaid by the liquidator
  * @throws Error if liquidation LTV or liquidation premium are not defined
  */
@@ -92,6 +93,7 @@ export const liquidatorMaxRepayAmount = (
   irParams: InterestRateParams,
   timeDelta: number,
   collateral: Collateral,
+  allCollaterals: Collateral[]
 ) => {
   if (!collateral.liquidationLTV || !collateral.liquidationPremium)
     throw new Error("Liquidation LTV or liquidation premium are not defined");
@@ -103,23 +105,48 @@ export const liquidatorMaxRepayAmount = (
     totalDebtShares,
     totalAssets,
     irParams,
-    timeDelta,
+    timeDelta
   );
 
-  const collateralValue = collateral.amount * collateral.price;
-
-  // Calculate secured value of this collateral (value_i × liqLTV_i)
-  const securedValue = collateralValue * collateral.liquidationLTV;
+  // Calculate sum of secured values from all collaterals (Σ(value_i × liqLTV_i))
+  const totalSecuredValue = allCollaterals.reduce((sum, coll) => {
+    if (!coll.liquidationLTV) {
+      throw new Error(
+        "LiquidationLTV is not defined for one or more collaterals"
+      );
+    }
+    return sum + coll.amount * coll.price * coll.liquidationLTV;
+  }, 0);
 
   // Calculate maxRepayCalc according to formula:
   // (debt – Σ(value_i × liqLTV_i)) / (1 – (1 + liqDiscount_x) × liqLTV_x)
   const denominator =
     1 - (1 + collateral.liquidationPremium) * collateral.liquidationLTV;
-  const maxRepayCalc = (debtAssets - securedValue) / denominator;
+  const maxRepayCalc = (debtAssets - totalSecuredValue) / denominator;
 
   // Calculate the collateral-based cap
+  const collateralValue = collateral.amount * collateral.price;
   const collateralCap = collateralValue / (1 + collateral.liquidationPremium);
 
   // Return max(min(maxRepayCalc, collateralCap), 0)
   return Math.max(Math.min(maxRepayCalc, collateralCap), 0);
+};
+
+/**
+ * Calculates the amount of collateral to transfer to the liquidator
+ * @param repayAmount - Amount being repaid by the liquidator
+ * @param collateral - The collateral being liquidated
+ * @returns The amount of collateral to transfer to the liquidator
+ * @throws Error if liquidation premium is not defined
+ */
+export const calculateCollateralToTransfer = (
+  repayAmount: number,
+  collateral: Collateral
+): number => {
+  if (!collateral.liquidationPremium) {
+    throw new Error("Liquidation premium is not defined");
+  }
+
+  const liquidationReward = repayAmount * collateral.liquidationPremium;
+  return (repayAmount + liquidationReward) / collateral.price;
 };
