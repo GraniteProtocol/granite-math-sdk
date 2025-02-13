@@ -1,292 +1,290 @@
-# Granite math library
+# Granite Math SDK
 
-Utility functions for any frontend connecting to Granite smart contracts.
+A comprehensive SDK for interacting with Granite Protocol's smart contracts. This library provides utility functions for calculating positions, liquidations, rewards, and more.
 
-## Multi-collateral Liquidation Mechanics
+## Table of Contents
 
-The Granite protocol supports multi-collateral positions, where users can deposit multiple different types of collateral assets to back their loans. This document explains how liquidation works in such cases.
+1. [Installation](#installation)
+2. [Account Management](#account-management)
+3. [Borrowing & Lending](#borrowing--lending)
+4. [Liquidations](#liquidations)
+5. [Liquidity Provider (LP) Functions](#liquidity-provider-functions)
+6. [LP Rewards](#lp-rewards)
 
-### Key Concepts
+## Installation
 
-1. **Liquidation LTV (liqLTV)**: The threshold at which a position becomes eligible for liquidation
-2. **Liquidation Premium (liqDiscount)**: The reward percentage given to liquidators
-3. **Secured Value**: The value of collateral adjusted by its liquidation LTV
-
-### Real-World Example
-
-Let's understand this with a real cryptocurrency scenario:
-
-A borrower has deposited three different cryptocurrencies as collateral:
-
-```typescript
-const position = {
-  bitcoin: {
-    amount: 0.04, // BTC
-    price: 25000, // $25,000/BTC
-    value: 1000, // Total value = $1,000
-    liquidationLTV: 0.78, // 78%
-    liquidationPremium: 0.1, // 10% premium
-  },
-  ethereum: {
-    amount: 0.332, // ETH
-    price: 2000, // $2,000/ETH
-    value: 664, // Total value = $664
-    liquidationLTV: 0.7, // 70%
-    liquidationPremium: 0.12, // 12% premium
-  },
-  solana: {
-    amount: 35, // SOL
-    price: 10, // $10/SOL
-    value: 350, // Total value = $350
-    liquidationLTV: 0.6, // 60%
-    liquidationPremium: 0.15, // 15% premium
-  },
-  debt: 1014, // Borrowed $1,014
-};
+```bash
+npm install granite-math-sdk
 ```
 
-#### Position Analysis
+## Account Management
 
-1. **Calculate Total Secured Value**:
+Functions for managing and monitoring account health and positions.
 
-   ```typescript
-   Secured Value =
-     (Bitcoin value × BTC liqLTV) +
-     (ETH value × ETH liqLTV) +
-     (SOL value × SOL liqLTV)
-   = ($1,000 × 0.78) + ($664 × 0.70) + ($350 × 0.60)
-   = $780 + $464.80 + $210
-   = $1,247.80
-   ```
-
-2. **Liquidation Scenario - ETH**:
-
-   A liquidator wants to liquidate the ETH position:
-
-   ```typescript
-   ETH Value = $664
-   Maximum Repay = $664 / (1 + 0.12) ≈ $592.86
-
-   If liquidator repays $592.86:
-   - They get ETH worth: $592.86 + ($592.86 × 0.12) = $664
-   - They receive: 0.332 ETH
-   - Their profit: $71.14 (12% premium)
-   ```
-
-3. **Post-Liquidation State**:
-
-   ```typescript
-   Original debt: $1,014
-   Debt repaid: $592.86
-   Remaining debt: $421.14
-
-   Remaining collateral:
-   - Bitcoin: $1,000
-   - Solana: $350
-   Total: $1,350
-   ```
-
-#### Important Insights
-
-1. **Individual Collateral Liquidation**: Even though the position is over-collateralized (secured value > debt), liquidators can still liquidate individual collaterals if they're willing to repay debt at the premium rate.
-
-2. **Win-Win Situation**:
-
-   - Borrower's debt reduces significantly
-   - Remaining collateral still provides good coverage
-   - Liquidator makes a profit through the premium
-   - Protocol becomes more secure
-
-3. **Premium Mechanics**: The liquidation premium (e.g., 12% for ETH) creates an incentive for liquidators while ensuring the borrower's position isn't liquidated at full market value.
-
-### Technical Implementation
-
-The liquidation mechanics are implemented through several key formulas:
-
-1. **Maximum Repay Calculation**:
-
-   ```typescript
-   maxRepayCalc_x = (debt - Σ(value_i × liqLTV_i)) / (1 - (1 + liqDiscount_x) × liqLTV_x)
-   ```
-
-   Where:
-
-   - `debt` is the total debt including accrued interest
-   - `Σ(value_i × liqLTV_i)` is the sum of secured values from all collaterals
-   - `liqDiscount_x` is the liquidation premium for collateral x
-   - `liqLTV_x` is the liquidation LTV for collateral x
-
-2. **Maximum Allowed Repay**:
-
-   ```typescript
-   maxRepayAllowed_x = max(
-     min(maxRepayCalc_x, collValue_x / (1 + liqDiscount_x)),
-     0
-   );
-   ```
-
-   Where:
-
-   - `collValue_x` is the current value of collateral x (amount × price)
-   - The `min` ensures liquidator cannot repay more than collateral value adjusted for premium
-   - The `max` ensures no negative repay amounts
-
-3. **Liquidation Reward**:
-
-   ```typescript
-   liqReward_x = repayAmt_x × liqDiscount_x
-   ```
-
-   - Reward is proportional to the amount being repaid
-   - Each collateral can have different premium rates
-
-4. **Collateral to Transfer**:
-   ```typescript
-   collToTransfer_x = (repayAmt_x + liqReward_x) / collPrice_x;
-   ```
-   - Determines how much collateral the liquidator receives
-   - Includes both the repaid amount and the liquidation reward
-
-### Important Implementation Notes
-
-1. **Over-collateralized Positions**:
-
-   - When `debt < Σ(value_i × liqLTV_i)`, `maxRepayCalc` will be negative
-   - This results in `maxRepayAllowed = 0`
-   - No liquidation is possible while the position is over-collateralized
-
-2. **Under-collateralized Positions**:
-
-   - When `debt > Σ(value_i × liqLTV_i)`, `maxRepayCalc` will be positive
-   - The actual repay amount will be capped by `collValue_x/(1 + liqDiscount_x)`
-   - This ensures liquidators can't extract more value than available
-
-3. **Individual Collateral Liquidation**:
-   - Each collateral is evaluated independently
-   - Different collaterals can have different LTVs and premiums
-   - The total secured value considers all collaterals
-
-### Code Example
+### Account Health
 
 ```typescript
-// Calculate maximum repayment allowed for collateral B
-const amtB = liquidatorMaxRepayAmount(
+import {
+  calculateAccountHealth,
+  calculateAccountLTV,
+  calculateAccountMaxLTV,
+  calculateAccountLiqLTV,
+  calculateTotalCollateralValue,
+} from "granite-math-sdk";
+
+// Get total value of collateral
+const totalValue = calculateTotalCollateralValue(collaterals);
+
+// Check account health (> 1 is healthy, < 1 needs attention)
+const healthFactor = calculateAccountHealth(collaterals, currentDebt);
+
+// Get current LTV ratio
+const currentLTV = calculateAccountLTV(totalDebt, collaterals);
+
+// Get maximum allowed LTV
+const maxLTV = calculateAccountMaxLTV(collaterals);
+
+// Get liquidation threshold LTV
+const liqLTV = calculateAccountLiqLTV(collaterals);
+```
+
+**When to use:**
+
+- Monitor position health
+- Check if close to liquidation
+- Calculate available borrowing capacity
+- Assess risk levels
+
+## Borrowing & Lending
+
+Functions for calculating borrowing capacity, interest rates, and debt conversions.
+
+### Borrowing Calculations
+
+```typescript
+import {
+  calculateBorrowCapacity,
+  userAvailableToBorrow,
+  calculateBorrowAPY,
+  convertDebtAssetsToShares,
+  convertDebtSharesToAssets,
+} from "granite-math-sdk";
+
+// Check how much you can borrow
+const borrowCapacity = calculateBorrowCapacity(collaterals);
+const availableToBorrow = userAvailableToBorrow(
+  collaterals,
+  freeLiquidity,
+  reserveBalance,
+  currentDebt
+);
+
+// Get current borrow APY
+const borrowAPY = calculateBorrowAPY(utilizationRate, irParams);
+
+// Convert between debt shares and assets
+const debtShares = convertDebtAssetsToShares(
+  debtAssets,
+  totalDebtShares,
+  totalAssets,
+  openInterest,
+  protocolReservePercentage,
+  irParams,
+  timeDelta
+);
+
+const debtAssets = convertDebtSharesToAssets(
+  debtShares,
+  openInterest,
+  totalDebtShares,
+  totalAssets,
+  irParams,
+  timeDelta
+);
+```
+
+**When to use:**
+
+- Before taking a loan to check capacity
+- To monitor borrowing costs
+- To convert between debt shares and actual debt amounts
+
+## Liquidations
+
+Functions for liquidators to calculate opportunities and rewards.
+
+### Liquidation Calculations
+
+```typescript
+import {
+  liquidatorMaxRepayAmount,
+  calculateCollateralToTransfer,
+} from "granite-math-sdk";
+
+// Check if and how much can be liquidated
+const maxRepay = liquidatorMaxRepayAmount(
   debtShares,
   openInterest,
   totalDebtShares,
   totalAssets,
   irParams,
   timeDelta,
-  collateralB,
-  [collateralA, collateralB, collateralC]
+  collateralToLiquidate,
+  allCollaterals
 );
 
-// If liquidation possible, calculate collateral to receive
-if (amtB > 0) {
-  const collateralToReceive = calculateCollateralToTransfer(amtB, collateralB);
+if (maxRepay > 0) {
+  // Calculate collateral you'll receive
+  const collateralToReceive = calculateCollateralToTransfer(
+    maxRepay,
+    collateralToLiquidate
+  );
+
+  // Calculate expected profit
+  const profit = collateralToReceive * collateralToLiquidate.price - maxRepay;
 }
 ```
 
-This implementation ensures:
+**When to use:**
 
-1. Liquidations only occur when positions are under-collateralized
-2. Liquidators can't extract more value than the collateral is worth
-3. Each collateral type can have its own risk parameters
-4. The system remains solvent through proper reward calculations
+- To check if a position can be liquidated
+- To calculate liquidation profitability
+- To determine how much collateral you'll receive
 
-### Multi-collateral Example
+## Liquidity Provider Functions
 
-Consider a position with three collateral assets:
+Functions for liquidity providers to manage their positions.
+
+### LP Calculations
 
 ```typescript
-const position = {
-  collateralA: {
-    amount: 100,
-    price: 10, // Total value = 1000
-    liquidationLTV: 0.78, // 78%
-    liquidationPremium: 0.1, // 10%
-  },
-  collateralB: {
-    amount: 664,
-    price: 1, // Total value = 664
-    liquidationLTV: 0.7, // 70%
-    liquidationPremium: 0.12, // 12%
-  },
-  collateralC: {
-    amount: 350,
-    price: 1, // Total value = 350
-    liquidationLTV: 0.6, // 60%
-    liquidationPremium: 0.15, // 15%
-  },
-  debt: 1014,
-};
+import {
+  convertLpAssetsToShares,
+  convertLpSharesToAssets,
+  calculateLpAPY,
+  computeTotalEarning,
+} from "granite-math-sdk";
+
+// Convert between LP tokens and underlying assets
+const lpShares = convertLpAssetsToShares(
+  assets,
+  totalShares,
+  totalAssets,
+  openInterest,
+  protocolReservePercentage,
+  irParams,
+  timeDelta
+);
+
+const assets = convertLpSharesToAssets(
+  shares,
+  totalShares,
+  totalAssets,
+  openInterest,
+  protocolReservePercentage,
+  irParams,
+  timeDelta
+);
+
+// Check current APY
+const apy = calculateLpAPY(
+  utilizationRate,
+  irParams,
+  protocolReservePercentage
+);
+
+// Calculate earnings
+const earnings = computeTotalEarning(
+  shares,
+  totalShares,
+  totalAssets,
+  openInterest,
+  protocolReservePercentage,
+  irParams,
+  reserveBalance,
+  timeDelta
+);
 ```
 
-### How Liquidation Works
+**When to use:**
 
-1. **Calculate Total Secured Value**
+- When providing or removing liquidity
+- To track earnings
+- To evaluate LP returns
 
-   ```typescript
-   totalSecuredValue = Σ(value_i × liqLTV_i)
-   // = (1000 × 0.78) + (664 × 0.70) + (350 × 0.60)
-   // = 780 + 464.8 + 210
-   // = 1247.8
-   ```
+## LP Rewards
 
-2. **For Each Collateral (x), Calculate Maximum Repay**
+Functions for calculating liquidity provider rewards.
 
-   ```typescript
-   maxRepayCalc_x = (debt - totalSecuredValue) / (1 - (1 + liqDiscount_x) × liqLTV_x)
-   ```
+### Reward Calculations
 
-   For collateral A:
+```typescript
+import { earnedRewards, totalLpRewards } from "granite-math-sdk";
 
-   ```typescript
-   denominator = 1 - (1 + 0.10) × 0.78 = 0.142
-   maxRepayCalc = (1014 - 1247.8) / 0.142 = -1645.77
-   ```
+// Calculate rewards for current epoch
+const rewards = earnedRewards(epoch, snapshots);
 
-3. **Apply Collateral Cap**
+// Calculate total rewards for all LPs
+const totalRewards = totalLpRewards(epoch);
+```
 
-   ```typescript
-   collateralCap = collateralValue / (1 + liqDiscount);
-   maxRepayAllowed = max(min(maxRepayCalc, collateralCap), 0);
-   ```
+**When to use:**
 
-   For collateral A:
+- To track earned rewards
+- To calculate expected rewards
+- To monitor reward distribution
 
-   ```typescript
-   collateralCap = 1000 / 1.1 = 909.09
-   maxRepayAllowed = max(min(-1645.77, 909.09), 0) = 0
-   ```
+## Types
 
-4. **Calculate Liquidation Reward**
+Common types used throughout the SDK:
 
-   ```typescript
-   liqReward = repayAmt × liqDiscount
-   ```
+```typescript
+interface Collateral {
+  amount: number;
+  price: number;
+  maxLTV?: number;
+  liquidationLTV?: number;
+  liquidationPremium?: number;
+}
 
-5. **Calculate Collateral to Transfer**
-   ```typescript
-   collToTransfer = (repayAmt + liqReward) / collPrice;
-   ```
+interface InterestRateParams {
+  slope1: number;
+  slope2: number;
+  baseIR: number;
+  urKink: number;
+}
 
-### Example Scenarios
+interface Epoch {
+  startTimestamp: number;
+  endTimestamp: number;
+  totalRewards: number;
+  targetAPR: number;
+  cap: number;
+}
 
-1. **Over-collateralized Position**
+interface Snapshot {
+  timestamp: number;
+  userLpShares: number;
+  totalLpShares: number;
+}
+```
 
-   - If debt < totalSecuredValue, maxRepayCalc will be negative
-   - Results in maxRepayAllowed = 0
-   - No liquidation possible
+## Error Handling
 
-2. **Under-collateralized Position**
-   - If debt > totalSecuredValue, maxRepayCalc will be positive
-   - Liquidator can repay up to min(maxRepayCalc, collateralCap)
-   - Receives collateral worth (repayAmt × (1 + liqDiscount))
+Most functions will throw errors if required parameters are undefined or invalid. Always wrap SDK calls in try-catch blocks:
 
-### Important Notes
+```typescript
+try {
+  const result = someSDKFunction(params);
+} catch (error) {
+  console.error("SDK Error:", error.message);
+}
+```
 
-1. **Independent Liquidation**: Each collateral can be liquidated independently
-2. **Liquidator Choice**: Liquidators can choose which collateral to receive
-3. **Premium Variation**: Different collaterals can have different liquidation premiums
-4. **Cap Protection**: The collateral cap ensures liquidators can't drain more value than available
+Common errors to handle:
+
+- "LiquidationLTV is not defined"
+- "MaxLTV is not defined"
+- "Current debt cannot be zero"
+- "Insufficient data to compute rewards"
+- "Invalid epoch duration"
