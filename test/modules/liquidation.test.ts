@@ -80,7 +80,7 @@ describe("Liquidation Module", () => {
     it("prevents repayment higher than actual debt (regression test for original issue)", () => {
       const collateral: Collateral = {
         liquidationPremium: 0.01, // 1% premium
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 1000,
         price: 1,
@@ -113,7 +113,7 @@ describe("Liquidation Module", () => {
     it("calculates max repay with proper secured value consideration", () => {
       const collateral: Collateral = {
         liquidationPremium: 0.1, // 10% premium
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 1000,
         price: 1,
@@ -144,24 +144,24 @@ describe("Liquidation Module", () => {
     it("handles multi-collateral case correctly", () => {
       const collateralA: Collateral = {
         liquidationPremium: 0.1, // 10% premium
-        maxLTV: 0.8,
-        liquidationLTV: 0.78, // 78%
+        maxLTV: 0.7,
+        liquidationLTV: 0.78,
         amount: 100,
         price: 10, // Value = 1000
       };
 
       const collateralB: Collateral = {
         liquidationPremium: 0.12, // 12% premium
-        maxLTV: 0.7,
-        liquidationLTV: 0.7, // 70%
+        maxLTV: 0.6,
+        liquidationLTV: 0.7,
         amount: 664,
         price: 1, // Value = 664
       };
 
       const collateralC: Collateral = {
         liquidationPremium: 0.15, // 15% premium
-        maxLTV: 0.6,
-        liquidationLTV: 0.6, // 60%
+        maxLTV: 0.5,
+        liquidationLTV: 0.6,
         amount: 350,
         price: 1, // Value = 350
       };
@@ -212,7 +212,7 @@ describe("Liquidation Module", () => {
     it("returns 0 when debt is fully secured by collateral", () => {
       const collateral: Collateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 2000, // High collateral amount
         price: 1,
@@ -236,7 +236,7 @@ describe("Liquidation Module", () => {
     it("respects collateral cap when debt is high", () => {
       const collateral: Collateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 100, // Low collateral amount
         price: 1,
@@ -260,7 +260,7 @@ describe("Liquidation Module", () => {
     it("handles zero collateral amount", () => {
       const collateral: Collateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 0,
         price: 1,
@@ -282,7 +282,7 @@ describe("Liquidation Module", () => {
 
     it("throws error when liquidation parameters are undefined", () => {
       const collateral = {
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         amount: 1000,
         price: 1,
       } as Collateral;
@@ -304,8 +304,8 @@ describe("Liquidation Module", () => {
     it("handles denominator near zero case", () => {
       const collateral: Collateral = {
         liquidationPremium: 0.25, // 25% premium
-        maxLTV: 0.8,
-        liquidationLTV: 0.79, // This makes (1 + 0.25) * 0.79 = 0.9875, denominator = 0.0125
+        maxLTV: 0.7,
+        liquidationLTV: 0.79,
         amount: 1000,
         price: 1,
       };
@@ -328,7 +328,7 @@ describe("Liquidation Module", () => {
     it("handles multiple collaterals of same type", () => {
       const collateral1: Collateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 500,
         price: 1,
@@ -336,7 +336,7 @@ describe("Liquidation Module", () => {
 
       const collateral2: Collateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 500,
         price: 1,
@@ -362,7 +362,7 @@ describe("Liquidation Module", () => {
     it("handles different price scales correctly", () => {
       const collateral: Collateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 1, // 1 BTC
         price: 50000, // $50,000 per BTC
@@ -386,7 +386,7 @@ describe("Liquidation Module", () => {
     it("handles zero and negative prices", () => {
       const zeroPrice: Collateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 1000,
         price: 0,
@@ -394,7 +394,7 @@ describe("Liquidation Module", () => {
 
       const negativePrice: Collateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 1000,
         price: -1,
@@ -429,7 +429,7 @@ describe("Liquidation Module", () => {
     it("throws error when any collateral in allCollaterals has undefined liquidationLTV", () => {
       const validCollateral: Collateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 1000,
         price: 1,
@@ -437,7 +437,7 @@ describe("Liquidation Module", () => {
 
       const invalidCollateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         // liquidationLTV is undefined
         amount: 500,
         price: 1,
@@ -462,7 +462,7 @@ describe("Liquidation Module", () => {
     it("calculates collateral to transfer correctly", () => {
       const collateral: Collateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 1000,
         price: 2,
@@ -482,7 +482,7 @@ describe("Liquidation Module", () => {
     it("handles different price scales in collateral transfer", () => {
       const collateral: Collateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 1,
         price: 50000, // $50,000 per unit
@@ -502,7 +502,7 @@ describe("Liquidation Module", () => {
     it("handles precision edge cases in collateral transfer", () => {
       const collateral: Collateral = {
         liquidationPremium: 0.1,
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 1,
         price: 0.0001, // Very small price
@@ -518,7 +518,7 @@ describe("Liquidation Module", () => {
 
     it("throws error when liquidation premium is undefined", () => {
       const collateral = {
-        maxLTV: 0.8,
+        maxLTV: 0.6,
         liquidationLTV: 0.7,
         amount: 1000,
         price: 1,
