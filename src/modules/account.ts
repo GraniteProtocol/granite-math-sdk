@@ -10,7 +10,8 @@
  * and risk assessment through various LTV metrics.
  */
 
-import { Collateral } from "../types";
+import { Collateral, InterestRateParams } from "../types";
+import { convertDebtSharesToAssets } from "./borrow";
 
 /**
  * Calculates the total value of all collateral assets
@@ -18,7 +19,7 @@ import { Collateral } from "../types";
  * @returns The sum of all collateral values (amount * price)
  */
 export function calculateTotalCollateralValue(
-  collaterals: Collateral[],
+  collaterals: Collateral[]
 ): number {
   return collaterals.reduce((total, collateral) => {
     return total + collateral.amount * collateral.price;
@@ -34,7 +35,7 @@ export function calculateTotalCollateralValue(
  */
 export function calculateAccountHealth(
   collaterals: Collateral[],
-  currentDebt: number,
+  currentDebt: number
 ): number {
   const totalCollateralValue = collaterals.reduce((total, collateral) => {
     if (!collateral.liquidationLTV) {
@@ -60,7 +61,7 @@ export function calculateAccountHealth(
  */
 export function calculateAccountLTV(
   accountTotalDebt: number,
-  collaterals: Collateral[],
+  collaterals: Collateral[]
 ): number {
   const accountCollateralValue = calculateTotalCollateralValue(collaterals);
 
@@ -112,4 +113,69 @@ export function calculateAccountLiqLTV(collaterals: Collateral[]): number {
   }, 0);
 
   return totalWeightedLTV / accountCollateralValue;
+}
+
+/**
+ * Calculates the maximum amount of a specific collateral that can be withdrawn
+ * @param collateralToWithdraw - The collateral asset to withdraw
+ * @param allCollaterals - Array of all collateral assets
+ * @param debtShares - Current debt shares of the account
+ * @param openInterest - Total outstanding loans in the protocol
+ * @param totalDebtShares - Total debt shares in the protocol
+ * @param totalAssets - Total assets in the protocol
+ * @param irParams - Interest rate parameters
+ * @param timeDelta - Current time delta
+ * @param decimals - Number of decimals for the token being withdrawn
+ * @returns The maximum amount that can be withdrawn
+ */
+export function calculateMaxWithdrawAmount(
+  collateralToWithdraw: Collateral,
+  allCollaterals: Collateral[],
+  debtShares: number,
+  openInterest: number,
+  totalDebtShares: number,
+  totalAssets: number,
+  irParams: InterestRateParams,
+  timeDelta: number,
+  decimals: number
+): number {
+  if (!collateralToWithdraw.maxLTV) {
+    throw new Error("MaxLTV is not defined for the selected collateral");
+  }
+
+  // if there's no loan, they can withdraw the full amount
+  if (debtShares === 0) {
+    return collateralToWithdraw.amount;
+  }
+
+  // Calculate future debt (10 minutes into the future)
+  const timeDeltaFuture = timeDelta + 600; // Add 10 minutes in seconds
+  const futureDebt = convertDebtSharesToAssets(
+    debtShares,
+    openInterest,
+    totalDebtShares,
+    totalAssets,
+    irParams,
+    timeDeltaFuture
+  );
+
+  // Calculate required collateral value to maintain position
+  const requiredCollateralValue = futureDebt / collateralToWithdraw.maxLTV;
+
+  // Calculate current total collateral value
+  const currentCollateralValue = calculateTotalCollateralValue(allCollaterals);
+
+  // Calculate excess collateral value that can be withdrawn
+  const excessCollateralValue =
+    currentCollateralValue - requiredCollateralValue;
+
+  // Convert excess value to token amount with proper decimal handling
+  const maxWithdrawAmount =
+    Math.floor(
+      (excessCollateralValue / collateralToWithdraw.price) *
+        Math.pow(10, decimals)
+    ) / Math.pow(10, decimals);
+
+  // Return the minimum between calculated max amount and actual collateral amount
+  return Math.max(0, Math.min(maxWithdrawAmount, collateralToWithdraw.amount));
 }

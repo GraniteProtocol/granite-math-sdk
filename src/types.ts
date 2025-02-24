@@ -9,6 +9,7 @@ export interface CollateralParams {
 export interface Collateral extends CollateralParams {
   amount: number;
   price: number;
+  maxLTV?: number;
 }
 
 export type InterestRateParams = {

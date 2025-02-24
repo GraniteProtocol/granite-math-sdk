@@ -273,3 +273,132 @@ const deteriorationTest = {
    // Check if new borrow is safe:
    const safeToBorrow = totalSecuredValue / (currentDebt + newBorrow) >= 1.2;
    ```
+
+## Understanding Maximum Withdrawal
+
+Now Charlie wants to withdraw some of his collateral. Let's see how much he can safely withdraw:
+
+```typescript
+// Charlie has borrowed $15,000 against his collateral
+const charlieDebt = 15000;
+const debtShares = 1500; // His debt represented in shares
+
+// Calculate maximum BTC withdrawal
+const maxBTCWithdraw = calculateMaxWithdrawAmount(
+  charliePortfolio.bitcoin,
+  [charliePortfolio.bitcoin, charliePortfolio.ethereum],
+  debtShares,
+  100000, // Total protocol loans
+  10000, // Total debt shares
+  200000, // Total protocol assets
+  {
+    baseIR: 0.01,
+    slope1: 0.1,
+    slope2: 1.0,
+    urKink: 0.8,
+  },
+  3600, // 1 hour since last update
+  8 // BTC decimals
+);
+
+console.log("Max BTC withdrawal:", maxBTCWithdraw);
+// This considers:
+// 1. Future debt (including accrued interest)
+// 2. Required collateral to maintain position
+// 3. Token decimal precision
+```
+
+### How Maximum Withdrawal Works
+
+The calculation takes into account several factors:
+
+1. **Current Debt Position**:
+
+   ```typescript
+   // If there's no debt, full withdrawal is possible
+   if (debtShares === 0) return fullAmount;
+   ```
+
+2. **Future Debt Projection**:
+
+   ```typescript
+   // Calculate debt including 10 minutes of future interest
+   const futureDebt = calculateFutureDebt(/* ... */);
+   ```
+
+3. **Required Collateral**:
+
+   ```typescript
+   // Calculate required collateral to maintain position
+   const requiredCollateral = futureDebt / maxLTV;
+   ```
+
+4. **Excess Collateral**:
+
+   ```typescript
+   // Calculate how much collateral value can be withdrawn
+   const excessValue = totalValue - requiredCollateral;
+   ```
+
+5. **Token Precision**:
+   ```typescript
+   // Convert to token amount with proper decimal handling
+   const maxWithdraw =
+     Math.floor((excessValue / price) * 10 ** decimals) / 10 ** decimals;
+   ```
+
+### Common Scenarios
+
+1. **No Debt**:
+
+   ```typescript
+   // User can withdraw all collateral
+   const maxWithdraw = collateral.amount;
+   ```
+
+2. **High Utilization**:
+
+   ```typescript
+   // Less withdrawal allowed due to higher interest
+   const maxWithdraw = calculateMaxWithdrawAmount(
+     collateral,
+     allCollaterals,
+     debtShares,
+     highOpenInterest, // High utilization
+     totalDebtShares,
+     totalAssets,
+     irParams,
+     timeDelta,
+     decimals
+   );
+   ```
+
+3. **Multiple Collaterals**:
+   ```typescript
+   // Consider all collateral values
+   const maxWithdraw = calculateMaxWithdrawAmount(
+     btcCollateral,
+     [btcCollateral, ethCollateral, usdcCollateral],
+     debtShares
+     /* ... */
+   );
+   ```
+
+### Why This Design Works
+
+1. **Safety First**:
+
+   - Accounts for future interest accrual
+   - Maintains required collateralization
+   - Prevents unsafe withdrawals
+
+2. **Precision Handling**:
+
+   - Proper decimal handling for different tokens
+   - No floating-point errors
+   - Consistent with blockchain precision
+
+3. **Flexibility**:
+   - Works with any collateral type
+   - Handles multiple collateral scenarios
+   - Adapts to changing market conditions

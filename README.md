@@ -30,6 +30,7 @@ import {
   calculateAccountMaxLTV,
   calculateAccountLiqLTV,
   calculateTotalCollateralValue,
+  calculateMaxWithdrawAmount,
 } from "granite-math-sdk";
 
 // Get total value of collateral
@@ -46,6 +47,19 @@ const maxLTV = calculateAccountMaxLTV(collaterals);
 
 // Get liquidation threshold LTV
 const liqLTV = calculateAccountLiqLTV(collaterals);
+
+// Calculate maximum amount that can be withdrawn for a specific collateral
+const maxWithdraw = calculateMaxWithdrawAmount(
+  collateralToWithdraw,
+  allCollaterals,
+  debtShares,
+  openInterest,
+  totalDebtShares,
+  totalAssets,
+  irParams,
+  timeDelta,
+  decimals
+);
 ```
 
 **When to use:**
@@ -53,6 +67,7 @@ const liqLTV = calculateAccountLiqLTV(collaterals);
 - Monitor position health
 - Check if close to liquidation
 - Calculate available borrowing capacity
+- Calculate maximum withdrawal amounts
 - Assess risk levels
 
 ## Borrowing & Lending
