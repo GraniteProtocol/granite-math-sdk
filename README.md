@@ -58,7 +58,8 @@ const maxWithdraw = calculateMaxWithdrawAmount(
   totalAssets,
   irParams,
   timeDelta,
-  decimals
+  decimals,
+  futureDeltaSeconds // Optional: seconds to add for future debt calculation (default: 600)
 );
 ```
 

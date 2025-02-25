@@ -126,6 +126,7 @@ export function calculateAccountLiqLTV(collaterals: Collateral[]): number {
  * @param irParams - Interest rate parameters
  * @param timeDelta - Current time delta
  * @param decimals - Number of decimals for the token being withdrawn
+ * @param futureDeltaSeconds - Optional seconds to add for future debt calculation (default: 600 seconds/10 minutes)
  * @returns The maximum amount that can be withdrawn
  */
 export function calculateMaxWithdrawAmount(
@@ -137,7 +138,8 @@ export function calculateMaxWithdrawAmount(
   totalAssets: number,
   irParams: InterestRateParams,
   timeDelta: number,
-  decimals: number
+  decimals: number,
+  futureDeltaSeconds: number = 600
 ): number {
   if (!collateralToWithdraw.maxLTV) {
     throw new Error("MaxLTV is not defined for the selected collateral");
@@ -148,8 +150,8 @@ export function calculateMaxWithdrawAmount(
     return collateralToWithdraw.amount;
   }
 
-  // Calculate future debt (10 minutes into the future)
-  const timeDeltaFuture = timeDelta + 600; // Add 10 minutes in seconds
+  // Calculate future debt (using configurable future time delta)
+  const timeDeltaFuture = timeDelta + futureDeltaSeconds;
   const futureDebt = convertDebtSharesToAssets(
     debtShares,
     openInterest,

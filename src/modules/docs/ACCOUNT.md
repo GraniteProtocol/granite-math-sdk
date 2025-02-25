@@ -298,7 +298,8 @@ const maxBTCWithdraw = calculateMaxWithdrawAmount(
     urKink: 0.8,
   },
   3600, // 1 hour since last update
-  8 // BTC decimals
+  8, // BTC decimals
+  600 // Optional: Future time window in seconds (default: 600 seconds/10 minutes)
 );
 
 console.log("Max BTC withdrawal:", maxBTCWithdraw);
@@ -322,7 +323,8 @@ The calculation takes into account several factors:
 2. **Future Debt Projection**:
 
    ```typescript
-   // Calculate debt including 10 minutes of future interest
+   // Calculate debt including configurable future time window (default: 10 minutes)
+   const timeDeltaFuture = timeDelta + futureDeltaSeconds;
    const futureDebt = calculateFutureDebt(/* ... */);
    ```
 
@@ -369,18 +371,25 @@ The calculation takes into account several factors:
      totalAssets,
      irParams,
      timeDelta,
-     decimals
+     decimals,
+     600 // Default future window: 10 minutes
    );
    ```
 
-3. **Multiple Collaterals**:
+3. **Conservative Risk Assessment**:
    ```typescript
-   // Consider all collateral values
-   const maxWithdraw = calculateMaxWithdrawAmount(
+   // Using a longer future window for more conservative estimate
+   const conservativeMaxWithdraw = calculateMaxWithdrawAmount(
      btcCollateral,
      [btcCollateral, ethCollateral, usdcCollateral],
-     debtShares
-     /* ... */
+     debtShares,
+     openInterest,
+     totalDebtShares,
+     totalAssets,
+     irParams,
+     timeDelta,
+     decimals,
+     3600 // 1 hour future window instead of 10 minutes
    );
    ```
 
@@ -391,6 +400,7 @@ The calculation takes into account several factors:
    - Accounts for future interest accrual
    - Maintains required collateralization
    - Prevents unsafe withdrawals
+   - Configurable risk assessment window
 
 2. **Precision Handling**:
 
@@ -402,3 +412,4 @@ The calculation takes into account several factors:
    - Works with any collateral type
    - Handles multiple collateral scenarios
    - Adapts to changing market conditions
+   - Customizable future time window

@@ -435,6 +435,58 @@ describe("Account Module", () => {
       expect(maxWithdrawFuture).toBeLessThan(maxWithdrawNow);
     });
 
+    it("uses the custom futureDeltaSeconds parameter correctly", () => {
+      const collateralToWithdraw = createCollateral(100, 10, 0.8, 0.8);
+      const allCollaterals = [collateralToWithdraw];
+
+      // With default 600 seconds (10 minutes)
+      const defaultFuture = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        500,
+        1000,
+        1000,
+        10000,
+        defaultIrParams,
+        3600,
+        18
+      );
+
+      // With shorter future window (60 seconds)
+      const shortFuture = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        500,
+        1000,
+        1000,
+        10000,
+        defaultIrParams,
+        3600,
+        18,
+        60 // 1 minute instead of 10
+      );
+
+      // With longer future window (3600 seconds)
+      const longFuture = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        500,
+        1000,
+        1000,
+        10000,
+        defaultIrParams,
+        3600,
+        18,
+        3600 // 1 hour instead of 10 minutes
+      );
+
+      // Shorter future window should allow more withdrawal
+      expect(shortFuture).toBeGreaterThan(defaultFuture);
+
+      // Longer future window should allow less withdrawal
+      expect(longFuture).toBeLessThan(defaultFuture);
+    });
+
     it("throws error if maxLTV is not defined", () => {
       const collateralToWithdraw = {
         amount: 100,
