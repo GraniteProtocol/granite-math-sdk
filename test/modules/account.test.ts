@@ -6,6 +6,7 @@ import {
   calculateLiquidationPoint,
   calculateDrop,
   calculateTotalCollateralValue,
+  calculateMaxWithdrawAmount,
   Collateral,
 } from "../../src";
 import { createCollateral } from "../utils";
@@ -37,7 +38,7 @@ describe("Account Module", () => {
       const currentDebt = 0;
 
       expect(() => calculateAccountHealth(collaterals, currentDebt)).toThrow(
-        "Current debt cannot be zero",
+        "Current debt cannot be zero"
       );
     });
 
@@ -60,7 +61,7 @@ describe("Account Module", () => {
       const currentDebt = 500;
 
       expect(() => calculateAccountHealth(collaterals, currentDebt)).toThrow(
-        "LiquidationLTV is not defined",
+        "LiquidationLTV is not defined"
       );
     });
   });
@@ -158,7 +159,7 @@ describe("Account Module", () => {
       ];
 
       expect(() => calculateAccountMaxLTV(collaterals)).toThrow(
-        "MaxLTV is not defined for one or more collaterals",
+        "MaxLTV is not defined for one or more collaterals"
       );
     });
   });
@@ -191,7 +192,7 @@ describe("Account Module", () => {
       ];
 
       expect(() => calculateAccountLiqLTV(collaterals)).toThrow(
-        "LiquidationLTV is not defined",
+        "LiquidationLTV is not defined"
       );
     });
   });
@@ -214,7 +215,7 @@ describe("Account Module", () => {
         1000, // total debt shares
         10000, // total assets (10% utilization rate)
         irParams,
-        1, // second
+        1 // second
       );
       expect(lp).toBeCloseTo(125);
     });
@@ -248,7 +249,7 @@ describe("Account Module", () => {
       const currentDebt = 500;
 
       expect(() => calculateDrop(collaterals, currentDebt)).toThrow(
-        "LiquidationLTV is not defined",
+        "LiquidationLTV is not defined"
       );
     });
   });
@@ -270,7 +271,7 @@ describe("Account Module", () => {
       ];
 
       expect(() => calculateAccountMaxLTV(collaterals)).toThrow(
-        "MaxLTV is not defined for one or more collaterals",
+        "MaxLTV is not defined for one or more collaterals"
       );
     });
 
@@ -289,9 +290,261 @@ describe("Account Module", () => {
         1000,
         10000,
         irParams,
-        1,
+        1
       );
       expect(lp).toBe(0);
+    });
+  });
+
+  describe("calculateMaxWithdrawAmount", () => {
+    const defaultIrParams = {
+      urKink: 0.8,
+      baseIR: 0.01,
+      slope1: 0.1,
+      slope2: 1.0,
+    };
+
+    it("returns full amount when there is no debt", () => {
+      const collateralToWithdraw = createCollateral(100, 10, 0.8, 0.8);
+      const allCollaterals = [collateralToWithdraw];
+
+      const maxWithdraw = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        0, // no debt shares
+        1000, // open interest
+        1000, // total debt shares
+        10000, // total assets
+        defaultIrParams,
+        3600, // 1 hour time delta
+        18 // decimals
+      );
+
+      expect(maxWithdraw).toBe(100);
+    });
+
+    it("handles decimal precision correctly", () => {
+      const collateralToWithdraw = createCollateral(100, 10, 0.8, 0.8);
+      const allCollaterals = [collateralToWithdraw];
+
+      const maxWithdraw = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        500, // debt shares
+        1000, // open interest
+        1000, // total debt shares
+        10000, // total assets
+        defaultIrParams,
+        3600, // 1 hour time delta
+        18 // decimals
+      );
+
+      // Should be properly rounded to 18 decimals
+      expect(maxWithdraw.toString()).not.toContain("999999999999999999");
+    });
+
+    it("returns 0 when no withdrawal is possible due to high debt", () => {
+      const collateralToWithdraw = createCollateral(100, 10, 0.8, 0.8);
+      const allCollaterals = [collateralToWithdraw];
+
+      const maxWithdraw = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        1000, // high debt shares
+        1000, // open interest
+        1000, // total debt shares
+        1000, // total assets
+        defaultIrParams,
+        3600,
+        18
+      );
+
+      expect(maxWithdraw).toBe(0);
+    });
+
+    it("handles multiple collaterals correctly", () => {
+      const collateralToWithdraw = createCollateral(100, 10, 0.8, 0.8); // Value: 1000
+      const otherCollateral = createCollateral(200, 5, 0.7, 0.7); // Value: 1000
+      const allCollaterals = [collateralToWithdraw, otherCollateral];
+
+      const maxWithdraw = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        500, // debt shares
+        1000,
+        1000,
+        10000,
+        defaultIrParams,
+        3600,
+        18
+      );
+
+      expect(maxWithdraw).toBeGreaterThan(0);
+      expect(maxWithdraw).toBeLessThanOrEqual(100);
+    });
+
+    it("respects maxLTV when calculating withdrawal amount", () => {
+      const collateralToWithdraw = createCollateral(100, 10, 0.5, 0.5); // Lower maxLTV
+      const allCollaterals = [collateralToWithdraw];
+
+      const maxWithdraw = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        300, // debt shares
+        1000,
+        1000,
+        10000,
+        defaultIrParams,
+        3600,
+        18
+      );
+
+      // Should allow less withdrawal due to lower maxLTV
+      expect(maxWithdraw).toBeLessThan(50);
+    });
+
+    it("handles future debt calculation correctly", () => {
+      const collateralToWithdraw = createCollateral(100, 10, 0.8, 0.8);
+      const allCollaterals = [collateralToWithdraw];
+
+      const maxWithdrawNow = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        500,
+        1000,
+        1000,
+        10000,
+        defaultIrParams,
+        0, // current time
+        18
+      );
+
+      const maxWithdrawFuture = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        500,
+        1000,
+        1000,
+        10000,
+        defaultIrParams,
+        3600 * 24, // 24 hours later
+        18
+      );
+
+      // Future withdrawal should be less due to accrued interest
+      expect(maxWithdrawFuture).toBeLessThan(maxWithdrawNow);
+    });
+
+    it("uses the custom futureDeltaSeconds parameter correctly", () => {
+      const collateralToWithdraw = createCollateral(100, 10, 0.8, 0.8);
+      const allCollaterals = [collateralToWithdraw];
+
+      // With default 600 seconds (10 minutes)
+      const defaultFuture = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        500,
+        1000,
+        1000,
+        10000,
+        defaultIrParams,
+        3600,
+        18
+      );
+
+      // With shorter future window (60 seconds)
+      const shortFuture = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        500,
+        1000,
+        1000,
+        10000,
+        defaultIrParams,
+        3600,
+        18,
+        60 // 1 minute instead of 10
+      );
+
+      // With longer future window (3600 seconds)
+      const longFuture = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        500,
+        1000,
+        1000,
+        10000,
+        defaultIrParams,
+        3600,
+        18,
+        3600 // 1 hour instead of 10 minutes
+      );
+
+      // Shorter future window should allow more withdrawal
+      expect(shortFuture).toBeGreaterThan(defaultFuture);
+
+      // Longer future window should allow less withdrawal
+      expect(longFuture).toBeLessThan(defaultFuture);
+    });
+
+    it("throws error if maxLTV is not defined", () => {
+      const collateralToWithdraw = {
+        amount: 100,
+        price: 10,
+        liquidationLTV: 0.8,
+      } as Collateral;
+      const allCollaterals = [collateralToWithdraw];
+
+      expect(() =>
+        calculateMaxWithdrawAmount(
+          collateralToWithdraw,
+          allCollaterals,
+          500,
+          1000,
+          1000,
+          10000,
+          defaultIrParams,
+          3600,
+          18
+        )
+      ).toThrow("MaxLTV is not defined");
+    });
+
+    it("handles different decimal precisions", () => {
+      const collateralToWithdraw = createCollateral(100, 10, 0.8, 0.8);
+      const allCollaterals = [collateralToWithdraw];
+
+      const maxWithdraw6Dec = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        500,
+        1000,
+        1000,
+        10000,
+        defaultIrParams,
+        3600,
+        6 // 6 decimals
+      );
+
+      const maxWithdraw18Dec = calculateMaxWithdrawAmount(
+        collateralToWithdraw,
+        allCollaterals,
+        500,
+        1000,
+        1000,
+        10000,
+        defaultIrParams,
+        3600,
+        18 // 18 decimals
+      );
+
+      // Both should be valid numbers with appropriate precision
+      expect(
+        maxWithdraw6Dec.toString().split(".")[1]?.length || 0
+      ).toBeLessThanOrEqual(6);
+      expect(
+        maxWithdraw18Dec.toString().split(".")[1]?.length || 0
+      ).toBeLessThanOrEqual(18);
     });
   });
 });
