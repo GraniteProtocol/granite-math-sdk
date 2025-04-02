@@ -1,4 +1,9 @@
-import { earnedRewards, totalLpRewards } from "../../src/modules/lpRewards";
+import {
+  calculateApr,
+  earnedRewards,
+  estimatedRewards,
+  totalLpRewards,
+} from "../../src/modules/lpRewards";
 import { secondsInAYear } from "../../src/constants";
 import { Epoch, Snapshot } from "../../src";
 
@@ -117,5 +122,65 @@ describe("lpRewards module tests", () => {
     // 0.1 * 1000 = 100
     const result = totalLpRewards(epoch);
     expect(result).toBe(100);
+  });
+
+  it("should calculate APR correctly for a 1 year period", () => {
+    const rewards = 500; // 500 lp tokens
+    const depositAmount = 10000; // 10k lp tokens
+    const timeInSeconds = secondsInAYear;
+
+    const apr = calculateApr(rewards, depositAmount, timeInSeconds);
+    expect(apr).toBe(0.05); // 5% APR
+  });
+
+  it("should calculate APR correctly for a partial year", () => {
+    const rewards = 250;
+    const depositAmount = 10000;
+    const timeInSeconds = secondsInAYear / 2; // 6 months
+
+    const apr = calculateApr(rewards, depositAmount, timeInSeconds);
+    expect(apr).toBe(0.05); // Still 5% APR when annualized
+  });
+
+  it("should throw error for zero deposit amount or invalid time period", () => {
+    expect(() => {
+      calculateApr(100, 0, secondsInAYear);
+    }).toThrow("Deposit amount must be positive");
+
+    expect(() => {
+      calculateApr(100, 1000, -1);
+    }).toThrow("Time period must be positive");
+  });
+
+  it("should calculate rewards correctly for one year", () => {
+    const depositAmount = 10000;
+    const apr = 0.05;
+    const durationInSeconds = secondsInAYear;
+
+    const rewards = estimatedRewards(depositAmount, apr, durationInSeconds);
+    expect(rewards).toBe(500);
+  });
+
+  it("should calculate rewards correctly for a quarter of year", () => {
+    const depositAmount = 10000;
+    const apr = 0.05;
+    const durationInSeconds = secondsInAYear / 4;
+
+    const rewards = estimatedRewards(depositAmount, apr, durationInSeconds);
+    expect(rewards).toBe(125); // (5% APY of 10000 notional) / 4 a quarter of the year
+  });
+
+  it("should throw error for invalid APR, time period or amount", () => {
+    expect(() => {
+      estimatedRewards(1000, -0.05, secondsInAYear);
+    }).toThrow("APR cannot be negative");
+
+    expect(() => {
+      estimatedRewards(0, 0.05, secondsInAYear);
+    }).toThrow("Deposit amount must be positive");
+
+    expect(() => {
+      estimatedRewards(1000, 0.05, 0);
+    }).toThrow("Duration must be positive");
   });
 });

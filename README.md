@@ -59,7 +59,7 @@ const maxWithdraw = calculateMaxWithdrawAmount(
   irParams,
   timeDelta,
   decimals,
-  futureDeltaSeconds // Optional: seconds to add for future debt calculation (default: 600)
+  futureDeltaSeconds, // Optional: seconds to add for future debt calculation (default: 600)
 );
 ```
 
@@ -92,7 +92,7 @@ const availableToBorrow = userAvailableToBorrow(
   collaterals,
   freeLiquidity,
   reserveBalance,
-  currentDebt
+  currentDebt,
 );
 
 // Get current borrow APY
@@ -106,7 +106,7 @@ const debtShares = convertDebtAssetsToShares(
   openInterest,
   protocolReservePercentage,
   irParams,
-  timeDelta
+  timeDelta,
 );
 
 const debtAssets = convertDebtSharesToAssets(
@@ -115,7 +115,7 @@ const debtAssets = convertDebtSharesToAssets(
   totalDebtShares,
   totalAssets,
   irParams,
-  timeDelta
+  timeDelta,
 );
 ```
 
@@ -146,14 +146,14 @@ const maxRepay = liquidatorMaxRepayAmount(
   irParams,
   timeDelta,
   collateralToLiquidate,
-  allCollaterals
+  allCollaterals,
 );
 
 if (maxRepay > 0) {
   // Calculate collateral you'll receive
   const collateralToReceive = calculateCollateralToTransfer(
     maxRepay,
-    collateralToLiquidate
+    collateralToLiquidate,
   );
 
   // Calculate expected profit
@@ -189,7 +189,7 @@ const lpShares = convertLpAssetsToShares(
   openInterest,
   protocolReservePercentage,
   irParams,
-  timeDelta
+  timeDelta,
 );
 
 const assets = convertLpSharesToAssets(
@@ -199,14 +199,14 @@ const assets = convertLpSharesToAssets(
   openInterest,
   protocolReservePercentage,
   irParams,
-  timeDelta
+  timeDelta,
 );
 
 // Check current APY
 const apy = calculateLpAPY(
   utilizationRate,
   irParams,
-  protocolReservePercentage
+  protocolReservePercentage,
 );
 
 // Calculate earnings
@@ -218,7 +218,7 @@ const earnings = computeTotalEarning(
   protocolReservePercentage,
   irParams,
   reserveBalance,
-  timeDelta
+  timeDelta,
 );
 ```
 

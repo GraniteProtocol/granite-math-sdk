@@ -38,7 +38,7 @@ describe("Account Module", () => {
       const currentDebt = 0;
 
       expect(() => calculateAccountHealth(collaterals, currentDebt)).toThrow(
-        "Current debt cannot be zero"
+        "Current debt cannot be zero",
       );
     });
 
@@ -61,7 +61,7 @@ describe("Account Module", () => {
       const currentDebt = 500;
 
       expect(() => calculateAccountHealth(collaterals, currentDebt)).toThrow(
-        "LiquidationLTV is not defined"
+        "LiquidationLTV is not defined",
       );
     });
   });
@@ -159,7 +159,7 @@ describe("Account Module", () => {
       ];
 
       expect(() => calculateAccountMaxLTV(collaterals)).toThrow(
-        "MaxLTV is not defined for one or more collaterals"
+        "MaxLTV is not defined for one or more collaterals",
       );
     });
   });
@@ -192,7 +192,7 @@ describe("Account Module", () => {
       ];
 
       expect(() => calculateAccountLiqLTV(collaterals)).toThrow(
-        "LiquidationLTV is not defined"
+        "LiquidationLTV is not defined",
       );
     });
   });
@@ -215,7 +215,7 @@ describe("Account Module", () => {
         1000, // total debt shares
         10000, // total assets (10% utilization rate)
         irParams,
-        1 // second
+        1, // second
       );
       expect(lp).toBeCloseTo(125);
     });
@@ -249,7 +249,7 @@ describe("Account Module", () => {
       const currentDebt = 500;
 
       expect(() => calculateDrop(collaterals, currentDebt)).toThrow(
-        "LiquidationLTV is not defined"
+        "LiquidationLTV is not defined",
       );
     });
   });
@@ -271,7 +271,7 @@ describe("Account Module", () => {
       ];
 
       expect(() => calculateAccountMaxLTV(collaterals)).toThrow(
-        "MaxLTV is not defined for one or more collaterals"
+        "MaxLTV is not defined for one or more collaterals",
       );
     });
 
@@ -290,7 +290,7 @@ describe("Account Module", () => {
         1000,
         10000,
         irParams,
-        1
+        1,
       );
       expect(lp).toBe(0);
     });
@@ -317,7 +317,7 @@ describe("Account Module", () => {
         10000, // total assets
         defaultIrParams,
         3600, // 1 hour time delta
-        18 // decimals
+        18, // decimals
       );
 
       expect(maxWithdraw).toBe(100);
@@ -336,7 +336,7 @@ describe("Account Module", () => {
         10000, // total assets
         defaultIrParams,
         3600, // 1 hour time delta
-        18 // decimals
+        18, // decimals
       );
 
       // Should be properly rounded to 18 decimals
@@ -356,7 +356,7 @@ describe("Account Module", () => {
         1000, // total assets
         defaultIrParams,
         3600,
-        18
+        18,
       );
 
       expect(maxWithdraw).toBe(0);
@@ -376,7 +376,7 @@ describe("Account Module", () => {
         10000,
         defaultIrParams,
         3600,
-        18
+        18,
       );
 
       expect(maxWithdraw).toBeGreaterThan(0);
@@ -396,7 +396,7 @@ describe("Account Module", () => {
         10000,
         defaultIrParams,
         3600,
-        18
+        18,
       );
 
       // Should allow less withdrawal due to lower maxLTV
@@ -416,7 +416,7 @@ describe("Account Module", () => {
         10000,
         defaultIrParams,
         0, // current time
-        18
+        18,
       );
 
       const maxWithdrawFuture = calculateMaxWithdrawAmount(
@@ -428,7 +428,7 @@ describe("Account Module", () => {
         10000,
         defaultIrParams,
         3600 * 24, // 24 hours later
-        18
+        18,
       );
 
       // Future withdrawal should be less due to accrued interest
@@ -449,7 +449,7 @@ describe("Account Module", () => {
         10000,
         defaultIrParams,
         3600,
-        18
+        18,
       );
 
       // With shorter future window (60 seconds)
@@ -463,7 +463,7 @@ describe("Account Module", () => {
         defaultIrParams,
         3600,
         18,
-        60 // 1 minute instead of 10
+        60, // 1 minute instead of 10
       );
 
       // With longer future window (3600 seconds)
@@ -477,7 +477,7 @@ describe("Account Module", () => {
         defaultIrParams,
         3600,
         18,
-        3600 // 1 hour instead of 10 minutes
+        3600, // 1 hour instead of 10 minutes
       );
 
       // Shorter future window should allow more withdrawal
@@ -505,8 +505,8 @@ describe("Account Module", () => {
           10000,
           defaultIrParams,
           3600,
-          18
-        )
+          18,
+        ),
       ).toThrow("MaxLTV is not defined");
     });
 
@@ -523,7 +523,7 @@ describe("Account Module", () => {
         10000,
         defaultIrParams,
         3600,
-        6 // 6 decimals
+        6, // 6 decimals
       );
 
       const maxWithdraw18Dec = calculateMaxWithdrawAmount(
@@ -535,15 +535,15 @@ describe("Account Module", () => {
         10000,
         defaultIrParams,
         3600,
-        18 // 18 decimals
+        18, // 18 decimals
       );
 
       // Both should be valid numbers with appropriate precision
       expect(
-        maxWithdraw6Dec.toString().split(".")[1]?.length || 0
+        maxWithdraw6Dec.toString().split(".")[1]?.length || 0,
       ).toBeLessThanOrEqual(6);
       expect(
-        maxWithdraw18Dec.toString().split(".")[1]?.length || 0
+        maxWithdraw18Dec.toString().split(".")[1]?.length || 0,
       ).toBeLessThanOrEqual(18);
     });
   });

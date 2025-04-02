@@ -22,7 +22,7 @@ import { convertDebtSharesToAssets } from "./borrow";
  */
 export function calculateDrop(
   collaterals: Collateral[],
-  currentDebt: number
+  currentDebt: number,
 ): number {
   const totalCollateralValue = collaterals.reduce((total, collateral) => {
     if (!collateral.liquidationLTV) {
@@ -58,7 +58,7 @@ export function calculateLiquidationPoint(
   totalDebtShares: number,
   totalAssets: number,
   irParams: InterestRateParams,
-  timeDelta: number
+  timeDelta: number,
 ): number {
   const accountDebt = convertDebtSharesToAssets(
     debtShares,
@@ -66,7 +66,7 @@ export function calculateLiquidationPoint(
     totalDebtShares,
     totalAssets,
     irParams,
-    timeDelta
+    timeDelta,
   );
 
   return accountLiqLTV !== 0 ? accountDebt / accountLiqLTV : 0;
@@ -93,7 +93,7 @@ export const liquidatorMaxRepayAmount = (
   irParams: InterestRateParams,
   timeDelta: number,
   collateral: Collateral,
-  allCollaterals: Collateral[]
+  allCollaterals: Collateral[],
 ) => {
   if (!collateral.liquidationLTV || !collateral.liquidationPremium)
     throw new Error("Liquidation LTV or liquidation premium are not defined");
@@ -105,14 +105,14 @@ export const liquidatorMaxRepayAmount = (
     totalDebtShares,
     totalAssets,
     irParams,
-    timeDelta
+    timeDelta,
   );
 
   // Calculate sum of secured values from all collaterals (Σ(value_i × liqLTV_i))
   const totalSecuredValue = allCollaterals.reduce((sum, coll) => {
     if (!coll.liquidationLTV) {
       throw new Error(
-        "LiquidationLTV is not defined for one or more collaterals"
+        "LiquidationLTV is not defined for one or more collaterals",
       );
     }
     return sum + coll.amount * coll.price * coll.liquidationLTV;
@@ -141,7 +141,7 @@ export const liquidatorMaxRepayAmount = (
  */
 export const calculateCollateralToTransfer = (
   repayAmount: number,
-  collateral: Collateral
+  collateral: Collateral,
 ): number => {
   if (!collateral.liquidationPremium) {
     throw new Error("Liquidation premium is not defined");
