@@ -19,7 +19,7 @@ import { convertDebtSharesToAssets } from "./borrow";
  * @returns The sum of all collateral values (amount * price)
  */
 export function calculateTotalCollateralValue(
-  collaterals: Collateral[]
+  collaterals: Collateral[],
 ): number {
   return collaterals.reduce((total, collateral) => {
     return total + collateral.amount * collateral.price;
@@ -35,7 +35,7 @@ export function calculateTotalCollateralValue(
  */
 export function calculateAccountHealth(
   collaterals: Collateral[],
-  currentDebt: number
+  currentDebt: number,
 ): number {
   const totalCollateralValue = collaterals.reduce((total, collateral) => {
     if (!collateral.liquidationLTV) {
@@ -61,7 +61,7 @@ export function calculateAccountHealth(
  */
 export function calculateAccountLTV(
   accountTotalDebt: number,
-  collaterals: Collateral[]
+  collaterals: Collateral[],
 ): number {
   const accountCollateralValue = calculateTotalCollateralValue(collaterals);
 
@@ -139,7 +139,7 @@ export function calculateMaxWithdrawAmount(
   irParams: InterestRateParams,
   timeDelta: number,
   decimals: number,
-  futureDeltaSeconds: number = 600
+  futureDeltaSeconds: number = 600,
 ): number {
   if (!collateralToWithdraw.maxLTV) {
     throw new Error("MaxLTV is not defined for the selected collateral");
@@ -158,7 +158,7 @@ export function calculateMaxWithdrawAmount(
     totalDebtShares,
     totalAssets,
     irParams,
-    timeDeltaFuture
+    timeDeltaFuture,
   );
 
   // Calculate required collateral value to maintain position
@@ -175,7 +175,7 @@ export function calculateMaxWithdrawAmount(
   const maxWithdrawAmount =
     Math.floor(
       (excessCollateralValue / collateralToWithdraw.price) *
-        Math.pow(10, decimals)
+        Math.pow(10, decimals),
     ) / Math.pow(10, decimals);
 
   // Return the minimum between calculated max amount and actual collateral amount

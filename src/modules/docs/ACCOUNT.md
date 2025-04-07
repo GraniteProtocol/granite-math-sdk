@@ -299,7 +299,7 @@ const maxBTCWithdraw = calculateMaxWithdrawAmount(
   },
   3600, // 1 hour since last update
   8, // BTC decimals
-  600 // Optional: Future time window in seconds (default: 600 seconds/10 minutes)
+  600, // Optional: Future time window in seconds (default: 600 seconds/10 minutes)
 );
 
 console.log("Max BTC withdrawal:", maxBTCWithdraw);
@@ -372,7 +372,7 @@ The calculation takes into account several factors:
      irParams,
      timeDelta,
      decimals,
-     600 // Default future window: 10 minutes
+     600, // Default future window: 10 minutes
    );
    ```
 
@@ -389,7 +389,7 @@ The calculation takes into account several factors:
      irParams,
      timeDelta,
      decimals,
-     3600 // 1 hour future window instead of 10 minutes
+     3600, // 1 hour future window instead of 10 minutes
    );
    ```
 

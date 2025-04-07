@@ -49,3 +49,40 @@ export function totalLpRewards(epoch: Epoch): number {
 
   return epoch.targetAPR * (epochDuration / secondsInAYear) * epoch.cap;
 }
+
+/**
+ * Calculates the actual APR based on rewards and deposit amount
+ * @param rewards - Total rewards earned
+ * @param depositAmount - Amount of tokens deposited
+ * @param timeInSeconds - Time period in seconds
+ * @returns The actual APR scaled as a decimal (e.g., 0.05 for 5% APR)
+ */
+export function calculateApr(
+  rewards: number,
+  depositAmount: number,
+  timeInSeconds: number,
+): number {
+  if (depositAmount <= 0) throw new Error("Deposit amount must be positive");
+  if (timeInSeconds <= 0) throw new Error("Time period must be positive");
+
+  return (rewards / depositAmount) * (secondsInAYear / timeInSeconds);
+}
+
+/**
+ * Estimates future rewards based on current LP share and APR
+ * @param depositAmount - Amount of tokens deposited
+ * @param apr - Annual Percentage Rate as a decimal
+ * @param durationInSeconds - Duration for which to estimate rewards
+ * @returns Estimated rewards for the given period
+ */
+export function estimatedRewards(
+  depositAmount: number,
+  apr: number,
+  durationInSeconds: number,
+): number {
+  if (depositAmount <= 0) throw new Error("Deposit amount must be positive");
+  if (apr < 0) throw new Error("APR cannot be negative");
+  if (durationInSeconds <= 0) throw new Error("Duration must be positive");
+
+  return depositAmount * apr * (durationInSeconds / secondsInAYear);
+}

@@ -8,11 +8,6 @@ jobs:
   publish:
     runs-on: ubuntu-latest
 
-    # Add permission to push back to the repository
-    permissions:
-      contents: write
-      packages: write
-
     strategy:
       matrix:
         node-version: [22.x]
@@ -28,19 +23,8 @@ jobs:
         with:
           registry-url: "https://registry.npmjs.org"
 
-      - name: Configure Git
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-
       - name: Install dependencies
         run: npm install
-
-      - name: Bump version
-        run: |
-          npm version patch -m "chore: bump version to %s [skip ci]"
-          git push
-          git push --tags
 
       - name: Build the project
         run: npm run build
