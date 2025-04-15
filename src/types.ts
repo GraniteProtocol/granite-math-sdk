@@ -22,12 +22,4 @@ export type Epoch = {
   startTimestamp: number;
   endTimestamp: number;
   totalRewards: number;
-  targetAPR: number;
-  cap: number;
-};
-
-export type Snapshot = {
-  timestamp: number;
-  totalLpShares: number;
-  userLpShares: number;
 };
