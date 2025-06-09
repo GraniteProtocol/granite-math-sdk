@@ -1,6 +1,6 @@
 /**
  * Daily Caps Module
- * 
+ *
  * It helps compute the bucket value and assess whether users can execute the related action or not.
  */
 
@@ -13,8 +13,17 @@
  * @param resetTime - Time period for full bucket reset in seconds (usually a day)
  * @returns The new bucket value, capped at maximum capacity
  */
-export function computeBucketValue(capFactor: number, currentCapValue: number, totalLiquidity: number, timeDelta: number, resetTime: number) {
+export function computeBucketValue(
+  capFactor: number,
+  currentCapValue: number,
+  totalLiquidity: number,
+  timeDelta: number,
+  resetTime: number,
+) {
   const maxBucketValue = totalLiquidity * capFactor;
-  const refillAmount = timeDelta > resetTime ? maxBucketValue : (maxBucketValue * timeDelta) / resetTime;
+  const refillAmount =
+    timeDelta > resetTime
+      ? maxBucketValue
+      : (maxBucketValue * timeDelta) / resetTime;
   return Math.min(maxBucketValue, refillAmount + currentCapValue);
 }
