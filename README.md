@@ -10,6 +10,7 @@ A comprehensive SDK for interacting with Granite Protocol's smart contracts. Thi
 4. [Liquidations](#liquidations)
 5. [Liquidity Provider (LP) Functions](#liquidity-provider-functions)
 6. [LP Rewards](#lp-rewards)
+7. [Daily Caps](#daily-caps)
 
 ## Installation
 
@@ -231,6 +232,10 @@ const earnings = computeTotalEarning(
 ## LP Rewards
 
 Functions for calculating liquidity provider rewards.
+
+## Daily Caps
+
+Functions for managing daily caps on LPs, collateral withdrawal and borrowing.
 
 ### Reward Calculations
 
