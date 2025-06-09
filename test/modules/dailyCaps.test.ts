@@ -8,7 +8,13 @@ describe("Daily caps module tests", () => {
     const timeDelta = 0;
     const resetTime = 86400; // one day in seconds
 
-    const newCap = computeBucketValue(capFactor, currentCapValue, totalLiquidity, timeDelta, resetTime);
+    const newCap = computeBucketValue(
+      capFactor,
+      currentCapValue,
+      totalLiquidity,
+      timeDelta,
+      resetTime,
+    );
     expect(newCap).toEqual(currentCapValue);
   });
 
@@ -22,7 +28,13 @@ describe("Daily caps module tests", () => {
     // maxBucketValue = 50
     // refillAmount = (50 * 43200) / 86400 = 25
     // new bucket value = min(50, 10 + 25) = 35
-    const newCap = computeBucketValue(capFactor, currentCapValue, totalLiquidity, timeDelta, resetTime);
+    const newCap = computeBucketValue(
+      capFactor,
+      currentCapValue,
+      totalLiquidity,
+      timeDelta,
+      resetTime,
+    );
     expect(newCap).toEqual(35);
   });
 
@@ -36,7 +48,13 @@ describe("Daily caps module tests", () => {
     // maxBucketValue = 50
     // refillAmount = 25 as in previous test
     // new bucket value = 40 + 25 = 65, but capped by min function at 50
-    const newCap = computeBucketValue(capFactor, currentCapValue, totalLiquidity, timeDelta, resetTime);
+    const newCap = computeBucketValue(
+      capFactor,
+      currentCapValue,
+      totalLiquidity,
+      timeDelta,
+      resetTime,
+    );
     expect(newCap).toEqual(50);
   });
 
@@ -49,7 +67,13 @@ describe("Daily caps module tests", () => {
 
     // When timeDelta > resetTime, refillAmount is set to maxBucketValue = 50
     // new bucket value = min(50, 0 + 50) = 50
-    const newCap = computeBucketValue(capFactor, currentCapValue, totalLiquidity, timeDelta, resetTime);
+    const newCap = computeBucketValue(
+      capFactor,
+      currentCapValue,
+      totalLiquidity,
+      timeDelta,
+      resetTime,
+    );
     expect(newCap).toEqual(50);
   });
 });
