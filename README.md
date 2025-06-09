@@ -233,10 +233,6 @@ const earnings = computeTotalEarning(
 
 Functions for calculating liquidity provider rewards.
 
-## Daily Caps
-
-Functions for managing daily caps on LPs, collateral withdrawal and borrowing.
-
 ### Reward Calculations
 
 ```typescript
@@ -254,6 +250,10 @@ const totalRewards = totalLpRewards(epoch);
 - To track earned rewards
 - To calculate expected rewards
 - To monitor reward distribution
+
+## Daily Caps
+
+Functions for managing daily caps on LPs, collateral withdrawal and borrowing.
 
 ## Types
 
