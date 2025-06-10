@@ -5,4 +5,4 @@ export * from "./modules/borrow";
 export * from "./modules/lp";
 export * from "./modules/liquidation";
 export * from "./modules/lpRewards";
-export * from "./modules/dailyCaps";
+export * from "./modules/adaptiveCaps";

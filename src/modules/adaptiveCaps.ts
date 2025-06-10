@@ -1,5 +1,5 @@
 /**
- * Daily Caps Module
+ * Adaptive Caps Module
  *
  * It helps compute the bucket value and assess whether users can execute the related action or not.
  */
