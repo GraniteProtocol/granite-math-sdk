@@ -10,7 +10,7 @@ A comprehensive SDK for interacting with Granite Protocol's smart contracts. Thi
 4. [Liquidations](#liquidations)
 5. [Liquidity Provider (LP) Functions](#liquidity-provider-functions)
 6. [LP Rewards](#lp-rewards)
-7. [Daily Caps](#daily-caps)
+7. [Adaptive Caps](#adaptive-caps)
 
 ## Installation
 
@@ -251,9 +251,9 @@ const totalRewards = totalLpRewards(epoch);
 - To calculate expected rewards
 - To monitor reward distribution
 
-## Daily Caps
+## Adaptive Caps
 
-Functions for managing daily caps on LPs, collateral withdrawal and borrowing.
+Functions for managing adaptive caps on LPs, collateral withdrawal and borrowing.
 
 ## Types
 

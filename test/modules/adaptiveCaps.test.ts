@@ -1,6 +1,6 @@
-import { computeBucketValue } from "../../src/modules/dailyCaps";
+import { computeBucketValue } from "../../src/modules/adaptiveCaps";
 
-describe("Daily caps module tests", () => {
+describe("Adaptive caps module tests", () => {
   it("returns current cap value when no time has passed", () => {
     const capFactor = 0.05; // 5%
     const totalLiquidity = 1000;
