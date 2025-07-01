@@ -6,3 +6,4 @@ export * from "./modules/lp";
 export * from "./modules/liquidation";
 export * from "./modules/lpRewards";
 export * from "./modules/adaptiveCaps";
+export * from "./modules/safetyModule";

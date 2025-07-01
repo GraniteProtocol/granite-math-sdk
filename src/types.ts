@@ -23,3 +23,10 @@ export type Epoch = {
   endTimestamp: number;
   totalRewards: number;
 };
+
+export type SafetyModuleParams = {
+  slope1: number;
+  slope2: number;
+  baseRewardRate: number;
+  stakedPercentageKink: number;
+}

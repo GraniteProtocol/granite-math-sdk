@@ -11,6 +11,8 @@ A comprehensive SDK for interacting with Granite Protocol's smart contracts. Thi
 5. [Liquidity Provider (LP) Functions](#liquidity-provider-functions)
 6. [LP Rewards](#lp-rewards)
 7. [Adaptive Caps](#adaptive-caps)
+8. [Safety Module](#safety-module)
+9. [Error Handling](#error-handling)
 
 ## Installation
 
@@ -255,40 +257,9 @@ const totalRewards = totalLpRewards(epoch);
 
 Functions for managing adaptive caps on LPs, collateral withdrawal and borrowing.
 
-## Types
+## Safety Module
 
-Common types used throughout the SDK:
-
-```typescript
-interface Collateral {
-  amount: number;
-  price: number;
-  maxLTV?: number;
-  liquidationLTV?: number;
-  liquidationPremium?: number;
-}
-
-interface InterestRateParams {
-  slope1: number;
-  slope2: number;
-  baseIR: number;
-  urKink: number;
-}
-
-interface Epoch {
-  startTimestamp: number;
-  endTimestamp: number;
-  totalRewards: number;
-  targetAPR: number;
-  cap: number;
-}
-
-interface Snapshot {
-  timestamp: number;
-  userLpShares: number;
-  totalLpShares: number;
-}
-```
+Functions for managing the safety module, the junior tranche of the protocol that absorbs losses before senior tranches.
 
 ## Error Handling
 
