@@ -42,18 +42,29 @@ export function lpApyWithStaking(
   }
 }
 
-export function stakerAPY(
+export function stakerBonus(
+  ur: number,
+  irParams: InterestRateParams,
+  sr: number,
+  smParams: SafetyModuleParams,
+) {
+  if (ur == 0 || sr == 0) return 0;
+  else {
+    const rewardRate = stakersRewardRate(sr, smParams);
+    const lpAPR =
+      annualizedAPR(ur, irParams) * rewardRate * ur / sr;
+    return (1 + lpAPR / secondsInAYear) ** secondsInAYear - 1;
+  }
+}
+
+export function stakingAPY(
   ur: number,
   irParams: InterestRateParams,
   protocolReservePercentage: number,
   sr: number,
   smParams: SafetyModuleParams,
 ) {
-  if (ur == 0) return 0;
-  else {
-    const rewardRate = stakersRewardRate(sr, smParams);
-    const lpAPR =
-      annualizedAPR(ur, irParams) * (1 - rewardRate - protocolReservePercentage) * ur + rewardRate * sr * ur;
-    return (1 + lpAPR / secondsInAYear) ** secondsInAYear - 1;
-  }
+  const lpApy = lpApyWithStaking(ur, irParams, protocolReservePercentage, sr, smParams);
+  const stBonus = stakerBonus(ur, irParams, sr, smParams);
+  return lpApy + stBonus;
 }

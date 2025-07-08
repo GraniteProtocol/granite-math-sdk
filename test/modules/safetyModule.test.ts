@@ -1,5 +1,5 @@
 import { InterestRateParams, SafetyModuleParams } from "../../src/types";
-import { calculateLpAPY, computeUtilizationRate, lpApyWithStaking, stakerAPY, stakersRewardRate, stakingRate } from "../../src";
+import { calculateLpAPY, computeUtilizationRate, lpApyWithStaking, stakersRewardRate, stakingAPY, stakingRate } from "../../src";
 
 describe("safety module tests", () => {
   const safetyParams: SafetyModuleParams = {
@@ -44,7 +44,7 @@ describe("safety module tests", () => {
       safetyParams
     )).toBe(0);
 
-    expect(stakerAPY(
+    expect(stakingAPY(
       0,
       irParams,
       protocolReservePercentage,
@@ -69,7 +69,7 @@ describe("safety module tests", () => {
       safetyParams
     );
     
-    const stakers = stakerAPY(
+    const stakers = stakingAPY(
       ur,
       irParams,
       protocolReservePercentage,
@@ -89,7 +89,7 @@ describe("safety module tests", () => {
     const ur = computeUtilizationRate(openInterest, totalAssets);
     const sr = stakingRate(stakedLpShares, totalLpShares);
     const lpApy = calculateLpAPY(ur, irParams, protocolReservePercentage);
-    const stakersApy = stakerAPY(
+    const stakersApy = stakingAPY(
       ur,
       irParams,
       protocolReservePercentage,

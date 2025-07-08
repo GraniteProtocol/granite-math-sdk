@@ -15,7 +15,7 @@ import { Epoch } from "../types";
  * @param epoch - The current epoch
  * @returns The actual APR scaled as a decimal (e.g., 0.05 for 5% APR)
  */
-export function calculateApr(
+export function calculateLpRewardApy(
   totalLpShares: number,
   userLpShares: number,
   epoch: Epoch,
