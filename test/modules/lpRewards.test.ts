@@ -1,4 +1,4 @@
-import { calculateApr, estimatedRewards } from "../../src/modules/lpRewards";
+import { calculateLpRewardApy, estimatedRewards } from "../../src/modules/lpRewards";
 import { secondsInAYear } from "../../src/constants";
 import { Epoch } from "../../src/types";
 
@@ -14,18 +14,18 @@ describe("lpRewards module tests", () => {
       endTimestamp: 1744821300,
       totalRewards: 1260,
     };
-    const apr = calculateApr(500_000, 100, epoch);
+    const apr = calculateLpRewardApy(500_000, 100, epoch);
     expect(apr).toBe(0.1533); // Still 15% APR when annualized
   });
 
-  describe("calculateApr error scenarios", () => {
+  describe("calculateLpRewardApy error scenarios", () => {
     it("should throw error if userLpShares is zero", () => {
       const epoch: Epoch = {
         startTimestamp: 1000,
         endTimestamp: 2000,
         totalRewards: 100,
       };
-      expect(() => calculateApr(500_000, 0, epoch)).toThrow(
+      expect(() => calculateLpRewardApy(500_000, 0, epoch)).toThrow(
         "User LP shares amount must be positive",
       );
     });
@@ -36,7 +36,7 @@ describe("lpRewards module tests", () => {
         endTimestamp: 2000,
         totalRewards: 100,
       };
-      expect(() => calculateApr(500_000, -50, epoch)).toThrow(
+      expect(() => calculateLpRewardApy(500_000, -50, epoch)).toThrow(
         "User LP shares amount must be positive",
       );
     });
