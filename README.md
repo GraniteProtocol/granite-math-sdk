@@ -10,8 +10,8 @@ A comprehensive SDK for interacting with Granite Protocol's smart contracts. Thi
 4. [Liquidations](#liquidations)
 5. [Liquidity Provider (LP) Functions](#liquidity-provider-functions)
 6. [LP Rewards](#lp-rewards)
-7. [Adaptive Caps](#adaptive-caps)
-8. [Safety Module](#safety-module)
+7. [Safety Module](#safety-module)
+8. [BTC Leverage](#btc-leverage)
 9. [Error Handling](#error-handling)
 
 ## Installation
@@ -253,13 +253,13 @@ const totalRewards = totalLpRewards(epoch);
 - To calculate expected rewards
 - To monitor reward distribution
 
-## Adaptive Caps
-
-Functions for managing adaptive caps on LPs, collateral withdrawal and borrowing.
-
 ## Safety Module
 
 Functions for managing the safety module, the junior tranche of the protocol that absorbs losses before senior tranches.
+
+## BTC Leverage
+
+Manage the math behind computing the max multiplier for leveraged BTC positions and the required collateral to swap.
 
 ## Error Handling
 
