@@ -1,4 +1,4 @@
-import { calculateAccountMaxLTV, calculateBorrowCapacity, leveragedCollateral, leveragedDebt, maxLeverage } from "../../src";
+import { calculateAccountMaxLTV, calculateBorrowCapacity, leverageHelper, maxLeverage } from "../../src";
 import { createCollateral } from "../utils";
 
 describe("Leverage module tests", () => {
@@ -31,20 +31,19 @@ describe("Leverage module tests", () => {
 
   it("computes correctly leveraged collateral", () => {
     const collaterals = [createCollateral(100, 10, 0.7, 0.7)];
-
     let leverage = maxLeverage(collaterals);
     leverage = Number(leverage.toFixed(2));
-    const val = leveragedCollateral(collaterals[0], leverage);
-    expect(val).toBe(leverage * 1000);
+    const debt = calculateBorrowCapacity(collaterals);
+  
+    const result = leverageHelper(collaterals[0], leverage, debt);
+    expect(result.collateral).toBe(2330);
+    expect(result.debt).toBe(1630);
   });
 
-  it("computes correctly leveraged debt", () => {
+  it("fails with invalid leverage value", () => {
     const collaterals = [createCollateral(100, 10, 0.7, 0.7)];
-    let leverage = maxLeverage(collaterals);
-    leverage = Number(leverage.toFixed(2));
-
-    const maxBorrow = calculateBorrowCapacity(collaterals);
-    const val = leveragedDebt(maxBorrow, leverage);
-    expect(val).toBe(leverage * maxBorrow);
+    expect(() => leverageHelper(collaterals[0], 0, 0)).toThrow(
+      "Invalid leverage value",
+    );
   });
 });
