@@ -14,11 +14,8 @@ export function maxLeverage(collaterals: Collateral[]): number {
   return 1 / (1 - maxLTV);
 }
 
-export function leveragedCollateral(collateral: Collateral, leverage: number): number {
-  const collateralValue = collateral.amount * collateral.price;
-  return collateralValue * leverage;
-}
-
-export function leveragedDebt(debt: number, leverage: number): number {
-  return debt * leverage;
+export function leverageHelper(collateral: Collateral, leverage: number, debt: number) {
+  if (leverage < 1) throw new Error("Invalid leverage value");
+  const collateralValue = collateral.amount * collateral.price * (leverage - 1);
+  return { collateral: collateralValue, debt: collateralValue - debt};
 }
