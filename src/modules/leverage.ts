@@ -28,7 +28,7 @@ export function absoluteMaxLeverage(collateral: Collateral): number {
  * @param slippage - Expected slippage as a fraction of notional
  * @returns The effective max LTV after costs
  */
-export function maxLeverage(
+export function correctedMaxLTV(
   collateral: Collateral,
   flashLoanFee: number,
   slippage: number,
@@ -47,6 +47,7 @@ export function maxLeverage(
  * @param irParams - Interest rate parameters
  * @param timeDelta - Time elapsed since last interest accrual
  * @param collateral - Current collateral params
+ * @param maxLTVcorrected - Max LTV corrected for flash loan fees and slippage
  * @returns The free collateral that the user has deposited
  */
 export function unencumberedCollateral(
@@ -57,9 +58,8 @@ export function unencumberedCollateral(
   irParams: InterestRateParams,
   timeDelta: number,
   collateral: Collateral,
+  maxLTVcorrected: number,
 ) {
-  if (!collateral.maxLTV) throw new Error("Invalid maxLTV");
-
   // Calculate total debt including accrued interest
   const debt = convertDebtSharesToAssets(
     debtShares,
@@ -69,7 +69,7 @@ export function unencumberedCollateral(
     irParams,
     timeDelta,
   );
-  const encumberedCollateralValue = debt / collateral.maxLTV;
+  const encumberedCollateralValue = debt / maxLTVcorrected;
   const totalCollateralValue = calculateTotalCollateralValue([collateral]);
   return totalCollateralValue - encumberedCollateralValue;
 }

@@ -1,6 +1,6 @@
 import {
   absoluteMaxLeverage,
-  maxLeverage,
+  correctedMaxLTV,
   unencumberedCollateral,
   leverageMaxSlippage,
   swapLoss,
@@ -32,22 +32,22 @@ describe("Leverage module tests", () => {
     });
   });
 
-  describe("maxLeverage", () => {
-    it("calculates account max LTV and resulting max leverage for a single collateral", () => {
+  describe("correctedMaxLTV", () => {
+    it("returns zero when fees consume the entire LTV", () => {
       const collateral = createCollateral(100, 10, 0.7, 0.7);
-      const leverage = maxLeverage(collateral, 1, 0);
-      expect(leverage).toBe(0);
+      const result = correctedMaxLTV(collateral, 1, 0);
+      expect(result).toBe(0);
     });
 
     it("applies fees and slippage to maxLTV", () => {
       const collateral = createCollateral(100, 1, 0.8, 0.8);
-      const result = maxLeverage(collateral, 0.01, 0.02);
+      const result = correctedMaxLTV(collateral, 0.01, 0.02);
       expect(result).toBeCloseTo((1 - 0.01 - 0.02) * 0.8);
     });
 
     it("throws when maxLTV is missing", () => {
       const badCollateral = { amount: 100, price: 1 } as any;
-      expect(() => maxLeverage(badCollateral, 0.01, 0.01)).toThrow(
+      expect(() => correctedMaxLTV(badCollateral, 0.01, 0.01)).toThrow(
         "Invalid maxLTV",
       );
     });
@@ -64,6 +64,7 @@ describe("Leverage module tests", () => {
         defaultIrParams,
         3600, // timeDelta
         collateral,
+        0.7, // maxLTVcorrected
       );
       expect(result).toBeCloseTo(100 * 2);
     });
@@ -79,6 +80,7 @@ describe("Leverage module tests", () => {
         defaultIrParams,
         7200,
         collateral,
+        0.6, // maxLTVcorrected
       );
 
       expect(result).toBeLessThan(0);
@@ -98,90 +100,80 @@ describe("Leverage module tests", () => {
         defaultIrParams,
         0, // no accrual
         collateral,
+        0.6, // maxLTVcorrected
       );
 
       expect(result).toBeCloseTo(0, 10);
     });
-  });
 
-  it("matches manual computation using convertDebtSharesToAssets", () => {
-    const collateral = createCollateral(100, 2, 0.5, 0.5); // total value 200
-    const debtShares = 1_000;
-    const openInterest = 10_000;
-    const totalDebtShares = 10_000;
-    const totalAssets = 20_000;
-    const timeDelta = 3600;
+    it("matches manual computation using convertDebtSharesToAssets", () => {
+      const collateral = createCollateral(100, 2, 0.5, 0.5); // total value 200
+      const debtShares = 1_000;
+      const openInterest = 10_000;
+      const totalDebtShares = 10_000;
+      const totalAssets = 20_000;
+      const timeDelta = 3600;
 
-    const debtAssets = convertDebtSharesToAssets(
-      debtShares,
-      openInterest,
-      totalDebtShares,
-      totalAssets,
-      defaultIrParams,
-      timeDelta,
-    );
-    const expected = 200 - debtAssets / (collateral.maxLTV as number);
+      const debtAssets = convertDebtSharesToAssets(
+        debtShares,
+        openInterest,
+        totalDebtShares,
+        totalAssets,
+        defaultIrParams,
+        timeDelta,
+      );
+      const expected = 200 - debtAssets / (collateral.maxLTV as number);
 
-    const result = unencumberedCollateral(
-      debtShares,
-      openInterest,
-      totalDebtShares,
-      totalAssets,
-      defaultIrParams,
-      timeDelta,
-      collateral,
-    );
+      const result = unencumberedCollateral(
+        debtShares,
+        openInterest,
+        totalDebtShares,
+        totalAssets,
+        defaultIrParams,
+        timeDelta,
+        collateral,
+        collateral.maxLTV as number, // pass through unchanged when comparing to old formula
+      );
 
-    expect(result).toBeCloseTo(expected);
-  });
+      expect(result).toBeCloseTo(expected);
+    });
 
-  it("throws when maxLTV is missing", () => {
-    const badCollateral = { amount: 100, price: 2 } as any;
-    expect(() =>
-      unencumberedCollateral(
-        1000,
+    it("is lower with higher utilization or longer time", () => {
+      const collateral = createCollateral(150, 1, 0.6, 0.6);
+      const base = unencumberedCollateral(
+        1_000,
+        10_000, // lower utilization
         10_000,
-        10_000,
-        20_000,
+        100_000, // assets large
         defaultIrParams,
         3600,
-        badCollateral,
-      ),
-    ).toThrow("Invalid maxLTV");
-  });
+        collateral,
+        0.6,
+      );
+      const higherUtil = unencumberedCollateral(
+        1_000,
+        80_000, // higher utilization
+        10_000,
+        100_000,
+        defaultIrParams,
+        3600,
+        collateral,
+        0.6,
+      );
+      const longerTime = unencumberedCollateral(
+        1_000,
+        10_000,
+        10_000,
+        100_000,
+        defaultIrParams,
+        21_600, // longer time
+        collateral,
+        0.6,
+      );
 
-  it("is lower with higher utilization or longer time", () => {
-    const collateral = createCollateral(150, 1, 0.6, 0.6);
-    const base = unencumberedCollateral(
-      1_000,
-      10_000, // lower utilization
-      10_000,
-      100_000, // assets large
-      defaultIrParams,
-      3600,
-      collateral,
-    );
-    const higherUtil = unencumberedCollateral(
-      1_000,
-      80_000, // higher utilization
-      10_000,
-      100_000,
-      defaultIrParams,
-      3600,
-      collateral,
-    );
-    const longerTime = unencumberedCollateral(
-      1_000,
-      10_000,
-      10_000,
-      100_000,
-      defaultIrParams,
-      21_600, // longer time
-      collateral,
-    );
-
-    expect(higherUtil).toBeLessThan(base);
-    expect(longerTime).toBeLessThan(base);
+      expect(higherUtil).toBeLessThan(base);
+      expect(longerTime).toBeLessThan(base);
+    });
   });
 });
 
