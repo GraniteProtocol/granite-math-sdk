@@ -34,10 +34,10 @@ To understand if Alice's position is safe, we need to calculate its "secured val
 
 ```typescript
 // For each collateral:
-// securedValue = value × liquidationLTV
+// securedValue = value x liquidationLTV
 
-Bitcoin secured value = $1,000 × 0.78 = $780
-Ethereum secured value = $664 × 0.7 = $464.80
+Bitcoin secured value = $1,000 x 0.78 = $780
+Ethereum secured value = $664 x 0.7 = $464.80
 
 Total secured value = $780 + $464.80 = $1,244.80
 ```
@@ -49,8 +49,8 @@ Since Alice's debt ($1,014) is less than the secured value ($1,244.80), her posi
 Bob notices ETH price drops to $1,800. Let's see if he can liquidate Alice's ETH position:
 
 ```typescript
-// New ETH value = 0.332 × $1,800 = $597.60
-// New ETH secured value = $597.60 × 0.7 = $418.32
+// New ETH value = 0.332 x $1,800 = $597.60
+// New ETH secured value = $597.60 x 0.7 = $418.32
 
 // New total secured value:
 Bitcoin secured value = $780 (unchanged)
@@ -66,10 +66,10 @@ Debt = $1,014 < Secured Value = $1,198.32
 Let's use our formula:
 
 ```typescript
-maxRepayCalc = (debt - totalSecuredValue) / (1 - (1 + premium) × liquidationLTV)
+maxRepayCalc = (debt - totalSecuredValue) / (1 - (1 + premium) x liquidationLTV)
 
 // For ETH:
-maxRepayCalc = (1014 - 1198.32) / (1 - (1 + 0.12) × 0.7)
+maxRepayCalc = (1014 - 1198.32) / (1 - (1 + 0.12) x 0.7)
              = -184.32 / 0.216
              = -853.33
 ```
@@ -81,8 +81,8 @@ Since maxRepayCalc is negative, Bob cannot liquidate yet!
 Now ETH price drops to $1,500:
 
 ```typescript
-// New ETH value = 0.332 × $1,500 = $498
-// New ETH secured value = $498 × 0.7 = $348.60
+// New ETH value = 0.332 x $1,500 = $498
+// New ETH secured value = $498 x 0.7 = $348.60
 
 // New total secured value:
 Bitcoin secured value = $780 (unchanged)
@@ -99,7 +99,7 @@ Now Bob can liquidate:
 
 ```typescript
 // For ETH:
-maxRepayCalc = (1014 - 1128.60) / (1 - (1 + 0.12) × 0.7)
+maxRepayCalc = (1014 - 1128.60) / (1 - (1 + 0.12) x 0.7)
              = -114.60 / 0.216
              = -530.56
 
@@ -119,13 +119,13 @@ If Bob decides to repay $444.64 of Alice's debt:
 
 ```typescript
 // Collateral Bob receives:
-collateralToTransfer = (repayAmount + repayAmount × premium) / price
-                     = (444.64 + 444.64 × 0.12) / 1500
+collateralToTransfer = (repayAmount + repayAmount x premium) / price
+                     = (444.64 + 444.64 x 0.12) / 1500
                      = 498 / 1500
                      = 0.332 ETH
 
 // Bob's profit:
-Value received = 0.332 ETH × $1,500 = $498
+Value received = 0.332 ETH x $1,500 = $498
 Amount paid = $444.64
 Profit = $53.36 (12% premium)
 ```
@@ -145,7 +145,7 @@ Bitcoin = 0.04 BTC (worth $1,000)
 ETH = 0 (liquidated)
 
 // New secured value:
-Bitcoin secured value = $1,000 × 0.78 = $780
+Bitcoin secured value = $1,000 x 0.78 = $780
 > Remaining debt ($569.36)
 // Position is now healthy again!
 ```
@@ -169,8 +169,8 @@ Bitcoin secured value = $1,000 × 0.78 = $780
 3. **Premium Incentives**:
    ```typescript
    // Liquidator profit increases with amount repaid:
-   profit = repayAmount × premium
-   // Example: $444.64 × 0.12 = $53.36
+   profit = repayAmount x premium
+   // Example: $444.64 x 0.12 = $53.36
    ```
 
 ## Common Scenarios
@@ -192,7 +192,7 @@ Bitcoin secured value = $1,000 × 0.78 = $780
 3. **Mixed Collateral Health**:
    ```typescript
    // Even if:
-   btcValue × btcLiqLTV > debt
+   btcValue x btcLiqLTV > debt
    // ETH can still be liquidated if:
    ethValue drops significantly
    ```

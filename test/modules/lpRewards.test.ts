@@ -1,4 +1,7 @@
-import { calculateLpRewardApy, estimatedRewards } from "../../src/modules/lpRewards";
+import {
+  calculateLpRewardApy,
+  estimatedRewards,
+} from "../../src/modules/lpRewards";
 import { secondsInAYear } from "../../src/constants";
 import { Epoch } from "../../src/types";
 

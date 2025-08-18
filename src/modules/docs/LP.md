@@ -102,7 +102,7 @@ function calculateLpAPY(ur: number, irParams: InterestRateParams) {
   const borrowAPR = irParams.baseIR + irParams.slope1 * ur;
 
   // 2. Calculate LP APR
-  // LP APR = Borrow APR × Utilization × (1 - Reserve %)
+  // LP APR = Borrow APR x Utilization x (1 - Reserve %)
   const lpAPR = borrowAPR * ur * (1 - protocolReservePercentage);
 
   // 3. Convert to APY
