@@ -40,15 +40,15 @@ Let's see how interest rates change with utilization:
 
 ```typescript
 // Below kink point (80% utilization):
-// rate = baseIR + slope1 × utilizationRate
+// rate = baseIR + slope1 x utilizationRate
 
 // At 60% utilization:
-const currentRate = 0.01 + 0.1 × 0.6;
+const currentRate = 0.01 + 0.1 x 0.6;
 // = 0.01 + 0.06
 // = 0.07 (7% APR)
 
 // If utilization goes above kink (e.g., 90%):
-const highUtilRate = 0.01 + (0.1 × 0.8) + (1.0 × (0.9 - 0.8));
+const highUtilRate = 0.01 + (0.1 x 0.8) + (1.0 x (0.9 - 0.8));
 // = 0.01 + 0.08 + 0.1
 // = 0.19 (19% APR)
 ```

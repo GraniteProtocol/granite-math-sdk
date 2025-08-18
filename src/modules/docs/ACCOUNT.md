@@ -46,10 +46,10 @@ Now, let's see how much Charlie can safely borrow:
 
 ```typescript
 // For each collateral:
-// maxBorrow = value × maxLTV
+// maxBorrow = value x maxLTV
 
-Bitcoin max borrow = $12,500 × 0.8 = $10,000
-Ethereum max borrow = $10,000 × 0.75 = $7,500
+Bitcoin max borrow = $12,500 x 0.8 = $10,000
+Ethereum max borrow = $10,000 x 0.75 = $7,500
 
 Total borrowing capacity = $17,500
 
@@ -75,10 +75,10 @@ The health factor tells us how close Charlie is to liquidation:
 
 ```typescript
 // For each collateral:
-// securedValue = value × liquidationLTV
+// securedValue = value x liquidationLTV
 
-Bitcoin secured value = $12,500 × 0.85 = $10,625
-Ethereum secured value = $10,000 × 0.8 = $8,000
+Bitcoin secured value = $12,500 x 0.85 = $10,625
+Ethereum secured value = $10,000 x 0.8 = $8,000
 
 Total secured value = $18,625
 
@@ -104,7 +104,7 @@ const btcPriceDrop = {
   bitcoin: {
     ...charliePortfolio.bitcoin,
     price: 20000, // 20% drop from $25,000
-    value: 10000, // New value = 0.5 BTC × $20,000
+    value: 10000, // New value = 0.5 BTC x $20,000
   },
   ethereum: charliePortfolio.ethereum, // Unchanged
 };
@@ -113,8 +113,8 @@ const btcPriceDrop = {
 // New LTV = $15,000 / $20,000 = 0.75 (75%)
 
 // New secured value:
-// BTC: $10,000 × 0.85 = $8,500
-// ETH: $10,000 × 0.8 = $8,000
+// BTC: $10,000 x 0.85 = $8,500
+// ETH: $10,000 x 0.8 = $8,000
 // Total = $16,500
 
 // New health factor = $16,500 / $15,000 = 1.1
@@ -141,8 +141,8 @@ const marketCrash = {
 // New LTV = $15,000 / $17,500 = 0.857 (85.7%)
 
 // New secured value:
-// BTC: $10,000 × 0.85 = $8,500
-// ETH: $7,500 × 0.8 = $6,000
+// BTC: $10,000 x 0.85 = $8,500
+// ETH: $7,500 x 0.8 = $6,000
 // Total = $14,500
 
 // New health factor = $14,500 / $15,000 = 0.967
@@ -156,14 +156,14 @@ const marketCrash = {
 The protocol calculates maximum LTV based on collateral composition:
 
 ```typescript
-// Weighted Max LTV = Σ(collateral_i.value × collateral_i.maxLTV) / total_value
+// Weighted Max LTV = Σ(collateral_i.value x collateral_i.maxLTV) / total_value
 
 const weightedMaxLTV = (
-  (12500 × 0.8 + 10000 × 0.75) / 22500
+  (12500 x 0.8 + 10000 x 0.75) / 22500
 ) = 0.778 (77.8%)
 
 // This means Charlie's absolute maximum borrow is:
-const maxBorrow = 22500 × 0.778 = $17,500
+const maxBorrow = 22500 x 0.778 = $17,500
 ```
 
 ### 2. Early Warning System
@@ -258,7 +258,7 @@ const deteriorationTest = {
 
    ```typescript
    // Effect on health:
-   newHealthFactor = (oldSecuredValue + newCollateralValue × liquidationLTV) / debt;
+   newHealthFactor = (oldSecuredValue + newCollateralValue x liquidationLTV) / debt;
    ```
 
 2. **Removing Collateral**:

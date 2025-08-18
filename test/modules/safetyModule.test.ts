@@ -1,5 +1,12 @@
 import { InterestRateParams, SafetyModuleParams } from "../../src/types";
-import { calculateLpAPY, computeUtilizationRate, lpApyWithStaking, stakersRewardRate, stakingAPY, stakingRate } from "../../src";
+import {
+  calculateLpAPY,
+  computeUtilizationRate,
+  lpApyWithStaking,
+  stakersRewardRate,
+  stakingAPY,
+  stakingRate,
+} from "../../src";
 
 describe("safety module tests", () => {
   const safetyParams: SafetyModuleParams = {
@@ -36,21 +43,13 @@ describe("safety module tests", () => {
   });
 
   it("APY is 0 if ur or sr is 0", () => {
-    expect(lpApyWithStaking(
-      0,
-      irParams,
-      protocolReservePercentage,
-      0,
-      safetyParams
-    )).toBe(0);
+    expect(
+      lpApyWithStaking(0, irParams, protocolReservePercentage, 0, safetyParams),
+    ).toBe(0);
 
-    expect(stakingAPY(
-      0,
-      irParams,
-      protocolReservePercentage,
-      0,
-      safetyParams
-    )).toBe(0);
+    expect(
+      stakingAPY(0, irParams, protocolReservePercentage, 0, safetyParams),
+    ).toBe(0);
   });
 
   it("staker and LP APY are the same if no shares are staked", () => {
@@ -66,17 +65,17 @@ describe("safety module tests", () => {
       irParams,
       protocolReservePercentage,
       sr,
-      safetyParams
+      safetyParams,
     );
-    
+
     const stakers = stakingAPY(
       ur,
       irParams,
       protocolReservePercentage,
       sr,
-      safetyParams
+      safetyParams,
     );
-    
+
     expect(base).toBe(stakers);
   });
 
@@ -94,7 +93,7 @@ describe("safety module tests", () => {
       irParams,
       protocolReservePercentage,
       sr,
-      safetyParams
+      safetyParams,
     );
 
     const correctedApy = lpApyWithStaking(
@@ -102,7 +101,7 @@ describe("safety module tests", () => {
       irParams,
       protocolReservePercentage,
       sr,
-      safetyParams
+      safetyParams,
     );
 
     expect(lpApy).toBeLessThan(stakersApy);

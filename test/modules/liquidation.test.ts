@@ -4,6 +4,7 @@ import {
   calculateLiquidationPoint,
   calculateCollateralToTransfer,
   Collateral,
+  liquidationRisk,
 } from "../../src";
 import { createCollateral } from "../utils";
 
@@ -181,8 +182,8 @@ describe("Liquidation Module", () => {
       );
 
       // Calculations for collateral B:
-      // totalSecuredValue = (1000 × 0.78) + (664 × 0.70) + (350 × 0.60) = 1247.8
-      // denominator = 1 - (1 + 0.12) × 0.70 = 0.156
+      // totalSecuredValue = (1000 x 0.78) + (664 x 0.70) + (350 x 0.60) = 1247.8
+      // denominator = 1 - (1 + 0.12) x 0.70 = 0.156
       // maxRepayCalc = (1014 - 1247.8) / 0.156 = -1497.44
       // collateralCap = 664 / (1 + 0.12) = 592.86
       // maxRepayAllowed = max(min(-1497.44, 592.86), 0) = 0
@@ -526,6 +527,217 @@ describe("Liquidation Module", () => {
 
       expect(() => calculateCollateralToTransfer(100, collateral)).toThrow(
         "Liquidation premium is not defined",
+      );
+    });
+  });
+
+  describe("calculateDrop extra cases", () => {
+    it("handles multiple collaterals", () => {
+      const collaterals: Collateral[] = [
+        createCollateral(100, 10, 0.8, 0.8), // secured = 800
+        { amount: 50, price: 20, maxLTV: 0.6, liquidationLTV: 0.6 }, // secured = 600
+      ];
+      const currentDebt = 700;
+      // total secured = 1400, drop = 1 - 700/1400 = 0.5
+      expect(calculateDrop(collaterals, currentDebt)).toBeCloseTo(0.5, 6);
+    });
+
+    it("returns a negative value when debt exceeds secured collateral", () => {
+      const collaterals: Collateral[] = [
+        createCollateral(100, 10, 0.8, 0.8), // secured = 800
+        { amount: 50, price: 20, maxLTV: 0.6, liquidationLTV: 0.6 }, // secured = 600
+      ];
+      const currentDebt = 2000;
+      // 1 - 2000/1400 = -0.428571...
+      expect(calculateDrop(collaterals, currentDebt)).toBeCloseTo(
+        -0.4285714286,
+        6,
+      );
+    });
+
+    it("ignores zero priced collateral contributions in the sum", () => {
+      const collaterals: Collateral[] = [
+        createCollateral(100, 10, 0.8, 0.8), // secured = 800
+        { amount: 100, price: 0, maxLTV: 0.7, liquidationLTV: 0.7 }, // secured = 0
+      ];
+      const currentDebt = 400;
+      // total secured = 800, drop = 1 - 400/800 = 0.5
+      expect(calculateDrop(collaterals, currentDebt)).toBeCloseTo(0.5, 6);
+    });
+  });
+
+  describe("calculateLiquidationPoint properties", () => {
+    it("scales inversely with accountLiqLTV", () => {
+      const args = {
+        debtShares: 100,
+        openInterest: 1000,
+        totalDebtShares: 1000,
+        totalAssets: 10000,
+        timeDelta: 1,
+      };
+      const lpAt08 = calculateLiquidationPoint(
+        0.8,
+        args.debtShares,
+        args.openInterest,
+        args.totalDebtShares,
+        args.totalAssets,
+        defaultIrParams,
+        args.timeDelta,
+      );
+      const lpAt05 = calculateLiquidationPoint(
+        0.5,
+        args.debtShares,
+        args.openInterest,
+        args.totalDebtShares,
+        args.totalAssets,
+        defaultIrParams,
+        args.timeDelta,
+      );
+      // LP(0.5) should be 1.6x LP(0.8)
+      expect(lpAt05).toBeCloseTo(lpAt08 * (0.8 / 0.5), 6);
+    });
+  });
+
+  describe("liquidationRisk coverage", () => {
+    it("matches baseline liquidation point when debtAssets is zero", () => {
+      const accountLiqLTV = 0.8;
+      const initialDebtShares = 100;
+      const initialOpenInterest = 1000;
+      const initialTotalDebtShares = 1000;
+      const initialTotalAssets = 10000;
+      const timeDelta = 1;
+
+      const baseline = calculateLiquidationPoint(
+        accountLiqLTV,
+        initialDebtShares,
+        initialOpenInterest,
+        initialTotalDebtShares,
+        initialTotalAssets,
+        defaultIrParams,
+        timeDelta,
+      );
+
+      const risk = liquidationRisk(
+        0, // debtAssets
+        initialOpenInterest,
+        initialTotalDebtShares,
+        initialTotalAssets,
+        0, // protocolReservePercentage
+        defaultIrParams,
+        timeDelta,
+        initialDebtShares,
+        initialOpenInterest,
+        initialTotalDebtShares,
+        initialTotalAssets,
+        accountLiqLTV,
+      );
+
+      expect(risk).toBeCloseTo(baseline, 6);
+    });
+
+    it("increases as additional debtAssets increases", () => {
+      const accountLiqLTV = 0.7;
+      const initialDebtShares = 200;
+      const initialOpenInterest = 2000;
+      const initialTotalDebtShares = 2000;
+      const initialTotalAssets = 15000;
+      const timeDelta = 3600;
+
+      const riskSmall = liquidationRisk(
+        100, // smaller added debt
+        initialOpenInterest,
+        initialTotalDebtShares,
+        initialTotalAssets,
+        0,
+        defaultIrParams,
+        timeDelta,
+        initialDebtShares,
+        initialOpenInterest,
+        initialTotalDebtShares,
+        initialTotalAssets,
+        accountLiqLTV,
+      );
+
+      const riskLarge = liquidationRisk(
+        500, // larger added debt
+        initialOpenInterest,
+        initialTotalDebtShares,
+        initialTotalAssets,
+        0,
+        defaultIrParams,
+        timeDelta,
+        initialDebtShares,
+        initialOpenInterest,
+        initialTotalDebtShares,
+        initialTotalAssets,
+        accountLiqLTV,
+      );
+
+      expect(riskLarge).toBeGreaterThan(riskSmall);
+    });
+  });
+
+  describe("liquidatorMaxRepayAmount extra edges", () => {
+    it("returns 0 when denominator is negative", () => {
+      const collateral: Collateral = {
+        liquidationPremium: 0.5, // makes denominator negative with liqLTV 0.8
+        maxLTV: 0.6,
+        liquidationLTV: 0.8,
+        amount: 1000,
+        price: 1,
+      };
+
+      const amt = liquidatorMaxRepayAmount(
+        1000,
+        1000,
+        1000,
+        2000,
+        defaultIrParams,
+        1,
+        collateral,
+        [collateral],
+      );
+
+      expect(amt).toBe(0);
+    });
+  });
+
+  describe("calculateCollateralToTransfer extra edges", () => {
+    it("returns 0 when repayAmount is 0", () => {
+      const collateral: Collateral = {
+        liquidationPremium: 0.1,
+        maxLTV: 0.6,
+        liquidationLTV: 0.7,
+        amount: 1000,
+        price: 2,
+      };
+      expect(calculateCollateralToTransfer(0, collateral)).toBe(0);
+    });
+
+    it("returns Infinity when price is 0", () => {
+      const collateral: Collateral = {
+        liquidationPremium: 0.1,
+        maxLTV: 0.6,
+        liquidationLTV: 0.7,
+        amount: 1000,
+        price: 0,
+      };
+      const v = calculateCollateralToTransfer(100, collateral);
+      expect(v).toBe(Infinity);
+    });
+
+    it("supports negative liquidation premiums arithmetically", () => {
+      const collateral: Collateral = {
+        liquidationPremium: -0.05,
+        maxLTV: 0.6,
+        liquidationLTV: 0.7,
+        amount: 1000,
+        price: 10,
+      };
+      // (100 + 100 * -0.05) / 10 = 9.5
+      expect(calculateCollateralToTransfer(100, collateral)).toBeCloseTo(
+        9.5,
+        6,
       );
     });
   });

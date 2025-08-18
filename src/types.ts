@@ -29,4 +29,4 @@ export type SafetyModuleParams = {
   slope2: number;
   baseRewardRate: number;
   stakedPercentageKink: number;
-}
+};

@@ -12,7 +12,7 @@
  */
 
 import { Collateral, InterestRateParams } from "../types";
-import { convertDebtSharesToAssets } from "./borrow";
+import { convertDebtAssetsToShares, convertDebtSharesToAssets } from "./borrow";
 
 /**
  * Calculates the price drop percentage that would trigger liquidation
@@ -108,7 +108,7 @@ export const liquidatorMaxRepayAmount = (
     timeDelta,
   );
 
-  // Calculate sum of secured values from all collaterals (Σ(value_i × liqLTV_i))
+  // Calculate sum of secured values from all collaterals (Σ(value_i x liqLTV_i))
   const totalSecuredValue = allCollaterals.reduce((sum, coll) => {
     if (!coll.liquidationLTV) {
       throw new Error(
@@ -119,7 +119,7 @@ export const liquidatorMaxRepayAmount = (
   }, 0);
 
   // Calculate maxRepayCalc according to formula:
-  // (debt – Σ(value_i × liqLTV_i)) / (1 – (1 + liqDiscount_x) × liqLTV_x)
+  // (debt - Σ(value_i x liqLTV_i)) / (1 - (1 + liqDiscount_x) x liqLTV_x)
   const denominator =
     1 - (1 + collateral.liquidationPremium) * collateral.liquidationLTV;
   const maxRepayCalc = (debtAssets - totalSecuredValue) / denominator;
@@ -149,4 +149,44 @@ export const calculateCollateralToTransfer = (
 
   const liquidationReward = repayAmount * collateral.liquidationPremium;
   return (repayAmount + liquidationReward) / collateral.price;
+};
+
+export const liquidationRisk = (
+  debtAssets: number,
+  openInterest: number,
+  totalDebtShares: number,
+  totalAssets: number,
+  protocolReservePercentage: number,
+  irParams: InterestRateParams,
+  timeDelta: number,
+  initialDebtShares: number,
+  initialOpenInterest: number,
+  initialTotalDebtShares: number,
+  initialTotalAssets: number,
+  accountLiqLTV: number,
+): number => {
+  const debtShares = convertDebtAssetsToShares(
+    debtAssets,
+    totalDebtShares,
+    totalAssets,
+    openInterest,
+    protocolReservePercentage,
+    irParams,
+    timeDelta,
+  );
+
+  const newDebtShares = initialDebtShares + debtShares;
+  const newOpenInterest = initialOpenInterest + debtAssets;
+  const newTotalDebtShares = initialTotalDebtShares + debtShares;
+  const newTotalAssets = initialTotalAssets - debtAssets;
+
+  return calculateLiquidationPoint(
+    accountLiqLTV,
+    newDebtShares,
+    newOpenInterest,
+    newTotalDebtShares,
+    newTotalAssets,
+    irParams,
+    timeDelta,
+  );
 };

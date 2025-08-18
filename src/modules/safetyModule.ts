@@ -9,14 +9,21 @@ import { secondsInAYear } from "../constants";
 import { InterestRateParams, SafetyModuleParams } from "../types";
 import { annualizedAPR } from "./borrow";
 
-export function stakingRate(stakedLpShares: number, totalLpShares: number): number {
+export function stakingRate(
+  stakedLpShares: number,
+  totalLpShares: number,
+): number {
   if (totalLpShares == 0) return 0;
   return stakedLpShares / totalLpShares;
 }
 
-export function stakersRewardRate(sr: number, params: SafetyModuleParams): number {
+export function stakersRewardRate(
+  sr: number,
+  params: SafetyModuleParams,
+): number {
   let rr: number;
-  if (sr < params.stakedPercentageKink) rr = params.slope1 * sr + params.baseRewardRate;
+  if (sr < params.stakedPercentageKink)
+    rr = params.slope1 * sr + params.baseRewardRate;
   else
     rr =
       params.slope2 * (sr - params.stakedPercentageKink) +
@@ -37,7 +44,9 @@ export function lpApyWithStaking(
   else {
     const rewardRate = stakersRewardRate(sr, smParams);
     const lpAPR =
-      annualizedAPR(ur, irParams) * (1 - rewardRate - protocolReservePercentage) * ur;
+      annualizedAPR(ur, irParams) *
+      (1 - rewardRate - protocolReservePercentage) *
+      ur;
     return (1 + lpAPR / secondsInAYear) ** secondsInAYear - 1;
   }
 }
@@ -51,8 +60,7 @@ export function stakerBonus(
   if (ur == 0 || sr == 0) return 0;
   else {
     const rewardRate = stakersRewardRate(sr, smParams);
-    const lpAPR =
-      annualizedAPR(ur, irParams) * rewardRate * ur / sr;
+    const lpAPR = (annualizedAPR(ur, irParams) * rewardRate * ur) / sr;
     return (1 + lpAPR / secondsInAYear) ** secondsInAYear - 1;
   }
 }
@@ -64,7 +72,13 @@ export function stakingAPY(
   sr: number,
   smParams: SafetyModuleParams,
 ) {
-  const lpApy = lpApyWithStaking(ur, irParams, protocolReservePercentage, sr, smParams);
+  const lpApy = lpApyWithStaking(
+    ur,
+    irParams,
+    protocolReservePercentage,
+    sr,
+    smParams,
+  );
   const stBonus = stakerBonus(ur, irParams, sr, smParams);
   return lpApy + stBonus;
 }
