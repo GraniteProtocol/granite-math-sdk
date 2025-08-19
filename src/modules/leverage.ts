@@ -10,14 +10,14 @@ import { calculateTotalCollateralValue } from "./account";
 import { convertDebtSharesToAssets } from "./borrow";
 
 /**
- * Calculates the absolute theoretical maximum leverage multiplier.
+ * Calculates the maximum leverage multiplier.
  * Assumes no fees or slippage and liquidation at the max LTV threshold.
- * @param collateral - Collateral configuration including maxLTV
+ * @param maxLtv - Corrected maxLTV
  * @returns The leverage multiplier 1 / (1 - maxLTV)
  */
-export function absoluteMaxLeverage(collateral: Collateral): number {
-  if (!collateral.maxLTV) throw new Error("Invalid maxLTV");
-  return 1 / (1 - collateral.maxLTV);
+export function absoluteMaxLeverage(maxLTV: number): number {
+  if (maxLTV >= 1 || maxLTV <= 0) throw new Error("Invalid maxLTV");
+  return 1 / (1 - maxLTV);
 }
 
 /**
@@ -34,6 +34,7 @@ export function correctedMaxLTV(
   slippage: number,
 ): number {
   if (!collateral.maxLTV) throw new Error("Invalid maxLTV");
+
   return (1 - flashLoanFee - slippage) * collateral.maxLTV;
 }
 
@@ -77,18 +78,13 @@ export function unencumberedCollateral(
 /**
  * Computes the slippage cost when levering up.
  * Based on the new collateral purchased and expected slippage.
- * @param unencumberedCollateralValue - Current free collateral value
- * @param leverage - Target leverage multiplier on the free collateral
+ * @param collateralValue - Current collateral value
  * @param slippage - Expected slippage as a fraction of notional
  * @returns The incremental loss due to slippage
  */
-export function leverageMaxSlippage(
-  unencumberedCollateralValue: number,
-  leverage: number,
-  slippage: number,
-) {
-  const newCollateralValue = unencumberedCollateralValue * (leverage - 1);
-  return newCollateralValue / (1 - slippage) - newCollateralValue;
+export function leverageMaxSlippage(collateralValue: number, slippage: number) {
+  if (slippage >= 1 || slippage < 0) throw new Error("Invalid slippage");
+  return collateralValue / (1 - slippage) - collateralValue;
 }
 
 /**
