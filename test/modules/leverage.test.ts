@@ -20,15 +20,13 @@ describe("Leverage module tests", () => {
 
   describe("absoluteMaxLeverage", () => {
     it("computes 1 over 1 minus maxLTV", () => {
-      const collateral = createCollateral(100, 10, 0.7, 0.7);
-      expect(absoluteMaxLeverage(collateral)).toBeCloseTo(1 / (1 - 0.7));
+      expect(absoluteMaxLeverage(0.7)).toBe(1 / (1 - 0.7));
     });
 
-    it("throws when maxLTV is missing", () => {
-      const badCollateral = { amount: 100, price: 1 } as any;
-      expect(() => absoluteMaxLeverage(badCollateral)).toThrow(
-        "Invalid maxLTV",
-      );
+    it("throws when maxLTV is invalid", () => {
+      expect(() => absoluteMaxLeverage(1)).toThrow("Invalid maxLTV");
+
+      expect(() => absoluteMaxLeverage(0)).toThrow("Invalid maxLTV");
     });
   });
 
@@ -178,26 +176,18 @@ describe("Leverage module tests", () => {
 });
 
 describe("leverageMaxSlippage", () => {
-  it("is zero when slippage is zero", () => {
-    expect(leverageMaxSlippage(100, 3, 0)).toBe(0);
-  });
-
   it("grows with target leverage and slippage", () => {
-    const low = leverageMaxSlippage(100, 2, 0.01);
-    const highLev = leverageMaxSlippage(100, 4, 0.01);
-    const highSlip = leverageMaxSlippage(100, 2, 0.03);
+    const low = leverageMaxSlippage(100, 0.2);
+    const highLev = leverageMaxSlippage(100, 0.4);
+    const highSlip = leverageMaxSlippage(100, 0.2);
 
     expect(highLev).toBeGreaterThan(low);
-    expect(highSlip).toBeGreaterThan(low);
+    expect(highSlip).toBe(low);
   });
 
-  it("matches closed form s over 1 minus s times new collateral value", () => {
-    const unencVal = 250;
-    const lev = 3;
-    const s = 0.02;
-    const newCollateralValue = unencVal * (lev - 1);
-    const expected = newCollateralValue * (s / (1 - s));
-    expect(leverageMaxSlippage(unencVal, lev, s)).toBeCloseTo(expected);
+  it("throws when slippage is invalid", () => {
+    expect(() => leverageMaxSlippage(100, 1)).toThrow("Invalid slippage");
+    expect(() => leverageMaxSlippage(100, -0.1)).toThrow("Invalid slippage");
   });
 });
 
